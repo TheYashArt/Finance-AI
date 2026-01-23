@@ -78,6 +78,22 @@ cd frontend
 npm install
 ```
 
+### 5. .env setup
+Create a .env file in backend folder and copy paste the following content
+```bash
+DATABASE_URL = "sqlite:///./finance.db"
+OLLAMA_MODEL=gemma2:2b
+VITE_API_URL=http://localhost:8000/api/v1
+VITE_API_TOKEN=your_token_here
+```
+
+create a another .env file in frontend folder and copy paste the following content
+``` bash 
+VITE_API_URL=http://localhost:8000/api/v1
+VITE_API_TOKEN=your_token_here
+```
+
+
 ---
 
 ## ▶️ Running the Application
@@ -101,6 +117,7 @@ npm run dev
 *Frontend runs on: `http://localhost:5173`*
 
 ---
+
 
 ## ❓ Troubleshooting
 
