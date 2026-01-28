@@ -76,7 +76,7 @@ const AIChatSection = () => {
                             <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
                                 <div className="flex items-center gap-2">
                                     <MessageSquare className="w-4 h-4 text-emerald-400" />
-                                    <span className="text-sm text-gray-400">AI Finance Agent (RAG + Web)</span>
+                                    <span className="text-sm text-gray-400">AI Finance Agent</span>
                                 </div>
                                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                             </div>

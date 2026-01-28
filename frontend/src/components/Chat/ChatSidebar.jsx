@@ -1,16 +1,34 @@
-import React, { useEffect } from 'react';
-import { MessageSquare, Plus, Search, Trash2, MessageCircle } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { MessageSquare, Plus, Search, Trash2, MessageCircle, MoreHorizontal } from 'lucide-react';
 import { useChatStore } from '../../store/useChatStore';
+import MoreOptionsModel from '../MoreOptionsModel';
+import { useNavigate } from 'react-router-dom';
 
 const ChatSidebar = () => {
+    const [openModalSessionId, setOpenModalSessionId] = useState(null);
+    const [editingSessionId, setEditingSessionId] = useState(null);
+    const [editedTitle, setEditedTitle] = useState('');
     const { sessions, currentSessionId, fetchSessions, createNewSession, selectSession, deleteSession, updateSessionTitle } = useChatStore();
+    const [isadmin, setIsadmin] = useState(localStorage.getItem("isAdmin"))
+    const [file, setFile] = useState(null)
+    const nav = useNavigate()
 
     useEffect(() => {
         fetchSessions();
     }, []);
 
     const handleNewChat = async () => {
-        await createNewSession();
+        try {
+            await createNewSession();
+            fetchSessions();
+        } catch (error) {
+            console.error('Error creating new session:', error);
+        }
+    };
+
+    const handleMoreOptions = (e, sessionId) => {
+        e.stopPropagation();
+        setOpenModalSessionId(openModalSessionId === sessionId ? null : sessionId);
     };
 
     const handleDelete = async (e, id) => {
@@ -20,9 +38,44 @@ const ChatSidebar = () => {
         }
     };
 
-    const handleTitleChange = (e, id) => {
-        const newTitle = e.target.value;
-        updateSessionTitle(id, newTitle);
+    const handleEdit = (e, id) => {
+        e.stopPropagation();
+        const session = sessions.find(s => s.id === id);
+        if (session) {
+            setEditedTitle(session.title);
+        }
+        setEditingSessionId(id);
+        setOpenModalSessionId(null);
+    };
+
+    // Prevent sessions updates from resetting the edited title
+    useEffect(() => {
+        if (editingSessionId && !editedTitle) {
+            const session = sessions.find(s => s.id === editingSessionId);
+            if (session) {
+                setEditedTitle(session.title);
+            }
+        }
+    }, [sessions, editingSessionId]);
+
+    const handleTitleSubmit = (e, id) => {
+        e.preventDefault();
+        updateSessionTitle(id, editedTitle);
+        setEditingSessionId(null);
+        setEditedTitle('');
+    };
+
+    const handleTitleChange = (e) => {
+        console.log('Title changing to:', e.target.value);
+        setEditedTitle(e.target.value);
+    };
+
+    const handleTitleBlur = (id) => {
+        if (editedTitle.trim()) {
+            updateSessionTitle(id, editedTitle);
+        }
+        setEditingSessionId(null);
+        setEditedTitle('');
     };
 
     // Group sessions by date
@@ -47,60 +100,107 @@ const ChatSidebar = () => {
         }
     });
 
+    const trainModel = (file) => {
+        console.log('Train model clicked');
+
+        fetch('/api/train-model', {
+            method: 'POST',
+            body: file,
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        })
+    }
+
     return (
-        <div className="w-72 border-r border-white/5 flex flex-col h-full bg-[#0B0E11] md:flex">
+        <div className="w-full h-[calc(100vh-7.5rem)] bg-black/20 backdrop-blur-xl border border-white/10 rounded-l-3xl shadow-2xl flex flex-col overflow-hidden relative">
+            <div className="flex justify-end py-2.5 z-10">
+                {
+                    isadmin && <button
+                        onClick={() => {
+                            nav('/train-model')
+                        }}
+                        className="bg-emerald-500/10 cursor-pointer hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-full py-1.5 px-3 flex items-center gap-1.5 transition-all text-xs font-medium hover:shadow-[0_0_15px_rgba(16,185,129,0.2)]"
+                    >
+                        <span>Train Model</span>
+                    </button>
+                }
+
+            </div>
+            <div className="absolute top-[2%] right-[-25%] w-[250px] h-[250px] 
+    bg-green-500/20 rounded-full blur-[50px]" />
+            <div className="absolute top-[-95px] left-[-55px] w-[250px] h-[250px] 
+    bg-blue-500/15 rounded-full blur-[50px]" />
+            <div className="absolute bottom-[-2%] right-[30%] w-[250px] h-[300px] 
+    bg-blue-400/30 rounded-full blur-[160px]" />
             {/* Header */}
-            <div className=" p-5 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-white tracking-tight">History Chat</h2>
+            <div className="p-5 z-10 flex items-center justify-between border-b border-white/5">
+                <h2 className="text-base font-semibold text-white tracking-tight">History Chat</h2>
                 <button
                     onClick={handleNewChat}
-                    className="bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-full py-1.5 px-3 flex items-center gap-1.5 transition-all text-xs font-medium"
+                    className="bg-emerald-500/10 cursor-pointer hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-full py-1.5 px-3 flex items-center gap-1.5 transition-all text-xs font-medium hover:shadow-[0_0_15px_rgba(16,185,129,0.2)]"
                 >
                     <Plus size={14} />
                     <span>New Chat</span>
                 </button>
             </div>
 
-            {/* Search */}
-            {/* <div className="px-5 pb-4">
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" size={14} />
-                    <input
-                        type="text"
-                        placeholder="Search chats..."
-                        className="w-full bg-white/5 border border-white/5 rounded-xl pl-9 pr-4 py-2.5 text-xs focus:outline-none focus:border-primary/30 text-gray-300 placeholder-gray-600 transition-colors"
-                    />
-                </div>
-            </div> */}
-
             {/* List */}
-            <div className="flex-1 overflow-y-auto px-3 pb-4 space-y-6 scrollbar-hide">
+            <div className="flex-1 relative overflow-y-auto px-4 py-4 space-y-5 scrollbar-hide">
+
                 {Object.entries(groupedSessions).map(([group, items]) => (
                     items.length > 0 && (
                         <div key={group}>
-                            <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 px-3">{group}</h3>
-                            <div className="space-y-1">
+                            <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2.5 px-2">{group}</h3>
+                            <div className="space-y-1.5">
                                 {items.map(session => (
                                     <div
                                         key={session.id}
                                         onClick={() => selectSession(session.id)}
-                                        className={`w-full text-left px-4 py-3 rounded-2xl cursor-pointer transition-all flex items-center justify-between group border ${currentSessionId === session.id
-                                            ? 'bg-white/5 text-white border-white/10 shadow-sm'
-                                            : 'text-gray-500 border-transparent hover:bg-white/5 hover:text-gray-300'
+                                        className={`relative w-full text-left px-3.5 py-3 rounded-xl cursor-pointer transition-all flex items-center justify-between group ${currentSessionId === session.id
+                                            ? 'bg-emerald-500/10 text-white border border-emerald-500/20 shadow-sm'
+                                            : 'text-gray-400 border border-transparent hover:bg-white/5 hover:text-gray-300 hover:border-white/10'
                                             }`}
                                     >
-                                        <div className="flex items-center gap-3 overflow-hidden">
-                                            <MessageSquare size={16} className={`${currentSessionId === session.id ? 'text-primary' : 'text-gray-600 group-hover:text-gray-500'
+                                        <div className="flex items-center gap-2.5 overflow-hidden flex-1 min-w-0">
+                                            <MessageSquare size={14} className={`shrink-0 ${currentSessionId === session.id ? 'text-emerald-400' : 'text-gray-600 group-hover:text-gray-500'
                                                 }`} />
-                                            <input type="text" value={session.title} onChange={(e) => handleTitleChange(e, session.id)} className="w-full text-sm font-medium" />
-
+                                            <form onSubmit={(e) => handleTitleSubmit(e, session.id)}>
+                                                <input
+                                                    type="text"
+                                                    value={editingSessionId === session.id ? editedTitle : session.title}
+                                                    onBlur={() => handleTitleBlur(session.id)}
+                                                    ref={(el) => {
+                                                        if (el && editingSessionId === session.id) {
+                                                            el.focus();
+                                                        }
+                                                    }}
+                                                    onChange={handleTitleChange}
+                                                    onClick={(e) => editingSessionId === session.id && e.stopPropagation()}
+                                                    readOnly={editingSessionId !== session.id}
+                                                    className={`w-full text-xs font-medium bg-transparent outline-none truncate transition-all ${editingSessionId === session.id
+                                                        ? 'cursor-text border border-emerald-500/50 bg-emerald-500/5 px-2 py-1 rounded'
+                                                        : 'cursor-pointer border-none'
+                                                        }`}
+                                                />
+                                            </form>
                                         </div>
                                         <button
-                                            onClick={(e) => handleDelete(e, session.id)}
-                                            className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-500/10 hover:text-red-400 rounded-full transition-all"
+                                            onClick={(e) => handleMoreOptions(e, session.id)}
+                                            className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-white/10 hover:text-emerald-400 rounded-lg transition-all shrink-0"
                                         >
-                                            <Trash2 size={12} />
+                                            <MoreHorizontal size={16} />
                                         </button>
+                                        {openModalSessionId === session.id && (
+                                            <div className="absolute right-0 top-full mt-1 z-50">
+                                                <MoreOptionsModel
+                                                    sessionId={session.id}
+                                                    onClose={() => setOpenModalSessionId(null)}
+                                                    onDelete={(e) => handleDelete(e, session.id)}
+                                                    onEdit={(e) => handleEdit(e, session.id)}
+                                                />
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>
@@ -109,8 +209,8 @@ const ChatSidebar = () => {
                 ))}
 
                 {sessions.length === 0 && (
-                    <div className="text-center text-gray-700 py-10">
-                        <MessageCircle size={32} className="mx-auto mb-2 opacity-20" />
+                    <div className="text-center text-gray-600 py-12">
+                        <MessageCircle size={28} className="mx-auto mb-2 opacity-20" />
                         <p className="text-xs">No chats yet</p>
                     </div>
                 )}

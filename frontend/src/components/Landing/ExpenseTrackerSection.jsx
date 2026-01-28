@@ -56,7 +56,7 @@ const ExpenseTrackerSection = () => {
                 <div className="relative max-w-4xl mx-auto">
 
                     {/* Floating Callout Cards */}
-                    <div className="absolute -left-4 lg:-left-20 top-1/4 animate-item opacity-0 scale-95 transition-all duration-600 z-20">
+                    <div className="absolute -left-4 lg:-left-20 top-3/4 animate-item opacity-0 scale-95 transition-all duration-600 z-20">
                         <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl p-4 max-w-[200px] shadow-[0_0_30px_rgba(16,185,129,0.1)]">
                             <Target className="w-5 h-5 text-emerald-400 mb-2" />
                             <p className="text-sm text-white font-medium">Set & track goals</p>
@@ -64,7 +64,7 @@ const ExpenseTrackerSection = () => {
                         </div>
                     </div>
 
-                    <div className="absolute -right-4 lg:-right-20 top-1/3 animate-item opacity-0 scale-95 transition-all duration-600 z-20">
+                    <div className="absolute -right-4 lg:-right-20 top-2/3 animate-item opacity-0 scale-95 transition-all duration-600 z-20">
                         <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl p-4 max-w-[200px] shadow-[0_0_30px_rgba(20,184,166,0.1)]">
                             <RefreshCw className="w-5 h-5 text-teal-400 mb-2" />
                             <p className="text-sm text-white font-medium">Recurring expenses</p>
@@ -72,7 +72,7 @@ const ExpenseTrackerSection = () => {
                         </div>
                     </div>
 
-                    <div className="absolute -left-4 lg:-left-16 bottom-1/4 animate-item opacity-0 scale-95 transition-all duration-600 z-20">
+                    <div className="absolute -left-4 lg:-left-16 bottom-2/4 animate-item opacity-0 scale-95 transition-all duration-600 z-20">
                         <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl p-4 max-w-[220px] shadow-[0_0_30px_rgba(245,158,11,0.1)]">
                             <Zap className="w-5 h-5 text-amber-400 mb-2" />
                             <p className="text-sm text-white font-medium">AI optimizations</p>
@@ -81,15 +81,15 @@ const ExpenseTrackerSection = () => {
                     </div>
 
                     {/* AI Bubble */}
-                    <div className="absolute -right-4 lg:-right-24 bottom-1/3 animate-item opacity-0 scale-95 transition-all duration-600 z-20">
-                        <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 max-w-[240px]">
+                    <div className="absolute -right-4 lg:-right-24 bottom-3/6 animate-item opacity-0 scale-95 transition-all duration-600 z-20">
+                        <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl p-4 max-w-[220px] shadow-[0_0_30px_rgba(20,184,166,0.1)]">
                             <div className="flex items-center gap-2 mb-2">
                                 <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center">
                                     <Zap className="w-3 h-3 text-emerald-400" />
                                 </div>
-                                <span className="text-xs text-emerald-400">AI Insight</span>
                             </div>
-                            <p className="text-sm text-emerald-300">"You can safely invest ₹5,000 more this month without touching your emergency buffer."</p>
+                            <p className="text-sm text-white font-medium">AI Suggestions</p>
+                            <p className="text-xs text-gray-500 mt-1">"You can safely invest ₹5,000 more this month without touching your emergency buffer."</p>
                         </div>
                     </div>
 
@@ -98,17 +98,10 @@ const ExpenseTrackerSection = () => {
                         <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-[3rem] p-3 shadow-[0_0_80px_rgba(16,185,129,0.15)]">
                             <div className="bg-[#0a0a0a] rounded-[2.5rem] overflow-hidden">
 
-                                {/* Status Bar */}
-                                <div className="flex items-center justify-between px-6 py-3">
-                                    <span className="text-xs text-gray-400">9:41</span>
-                                    <div className="w-20 h-5 bg-black rounded-full" />
-                                    <div className="flex items-center gap-1 text-xs text-gray-400">
-                                        <span>100%</span>
-                                    </div>
-                                </div>
+
 
                                 {/* Content */}
-                                <div className="px-5 pb-6">
+                                <div className="px-5 py-6">
                                     {/* Monthly Summary */}
                                     <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-4">
                                         <p className="text-xs text-gray-500 mb-2">December 2024</p>

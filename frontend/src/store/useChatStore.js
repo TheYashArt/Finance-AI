@@ -109,9 +109,16 @@ export const useChatStore = create((set, get) => ({
         // Add placeholder for assistant message
         addMessage({ role: 'assistant', content: '', created_at: new Date().toISOString() });
 
+        // Create timeout promise
+        const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Request timeout after 30 seconds')), 30000);
+        });
+
         try {
             const token = import.meta.env.VITE_API_TOKEN;
-            const response = await fetch(`${API_URL}/ai/chat/${sessionId}`, {
+            console.log('Sending request to:', `${API_URL}/ai/chat/${sessionId}`);
+
+            const fetchPromise = fetch(`${API_URL}/ai/chat/${sessionId}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -120,8 +127,12 @@ export const useChatStore = create((set, get) => ({
                 body: JSON.stringify({ message: content, mode })
             });
 
+            const response = await Promise.race([fetchPromise, timeoutPromise]);
+
             if (!response.ok) {
-                throw new Error('Failed to send message');
+                const errorText = await response.text();
+                console.error('API Error Response:', errorText);
+                throw new Error(`Failed to send message: ${response.status} ${response.statusText}`);
             }
 
             const reader = response.body.getReader();
@@ -130,7 +141,10 @@ export const useChatStore = create((set, get) => ({
 
             while (true) {
                 const { done, value } = await reader.read();
-                if (done) break;
+                if (done) {
+                    console.log('Stream completed');
+                    break;
+                }
 
                 const chunk = decoder.decode(value);
                 const lines = chunk.split('\n');
@@ -174,7 +188,7 @@ export const useChatStore = create((set, get) => ({
                                 });
                             }
                         } catch (e) {
-                            // console.error('Error parsing SSE data', e);
+                            console.error('Error parsing SSE data:', e, 'Line:', line);
                         }
                     }
                 }
@@ -232,8 +246,21 @@ export const useChatStore = create((set, get) => ({
         } catch (error) {
             console.error('Chat error:', error);
             set({ error: error.message });
-            addMessage({ role: 'assistant', content: 'Sorry, I encountered an error. Please try again.', created_at: new Date().toISOString() });
+
+            // Update the last message with error
+            set((state) => {
+                const newMessages = [...state.messages];
+                if (newMessages.length > 0 && newMessages[newMessages.length - 1].role === 'assistant') {
+                    newMessages[newMessages.length - 1] = {
+                        role: 'assistant',
+                        content: 'Sorry, I encountered an error. Please try again. Error: ' + error.message,
+                        created_at: new Date().toISOString()
+                    };
+                }
+                return { messages: newMessages };
+            });
         } finally {
+            console.log('Setting isLoading to false');
             set({ isLoading: false });
         }
     }

@@ -1,8 +1,17 @@
 import React, { useEffect, useRef } from 'react';
 import { Mic, Volume2, Languages, MessageSquare } from 'lucide-react';
+import video from '../../assets/video.mp4';
 
 const VoiceAvatarSection = () => {
     const sectionRef = useRef(null);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setShowWoman(prev => !prev);
+        }, 5000); // Flip every 5 seconds
+
+        return () => clearInterval(interval);
+    }, []);
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -71,62 +80,66 @@ const VoiceAvatarSection = () => {
 
                     {/* Right - Voice Avatar Card */}
                     <div className="animate-item opacity-0 translate-y-6 transition-all duration-600">
-                        <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl shadow-[0_0_60px_rgba(20,184,166,0.1)] overflow-hidden p-8">
+                        <div className="backdrop-blur-xl border border-white/10 rounded-3xl shadow-[0_0_60px_rgba(20,184,166,0.1)] overflow-hidden p-8">
 
                             {/* Avatar with Waveform */}
-                            <div className="flex flex-col items-center mb-8">
-                                {/* Avatar Circle */}
-                                <div className="relative w-40 h-40 mb-6">
-                                    {/* Outer waveform ring */}
-                                    <div className="absolute inset-0 rounded-full border-2 border-teal-500/30 animate-ping" style={{ animationDuration: '3s' }} />
-                                    <div className="absolute inset-2 rounded-full border border-emerald-500/20 animate-pulse" style={{ animationDuration: '2s' }} />
-                                    <div className="absolute inset-4 rounded-full border border-teal-500/20 animate-pulse" style={{ animationDuration: '2.5s', animationDelay: '0.5s' }} />
+                            <div className="col-span-2 sm:col-span-1 backdrop-blur-xl  rounded-3xl p-5  flex flex-col items-center justify-center">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <Mic className="w-4 h-4 text-teal-400" />
+                                    <span className="text-xs text-gray-400">Voice Avatar</span>
+                                </div>
 
-                                    {/* Avatar face */}
-                                    <div className="absolute inset-6 rounded-full bg-gradient-to-br from-teal-500/20 to-emerald-500/20 backdrop-blur-sm border border-white/10 flex items-center justify-center">
-                                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-teal-400 to-emerald-400 flex items-center justify-center shadow-[0_0_30px_rgba(20,184,166,0.4)]">
-                                            <span className="text-2xl font-bold text-black">₹</span>
-                                        </div>
+                                {/* AI Avatar Face */}
+                                <div className="relative w-[150px] h-[150px] mb-4" style={{ perspective: '1000px' }}>
+                                    {/* Waveform Ring */}
+                                    <div className="absolute inset-0 rounded-full border-2 border-emerald-500/40 animate-subtle-ping" style={{ animationDuration: '2s' }} />
+                                    <div className="absolute inset-2 rounded-full border border-teal-500/30 animate-pulse" />
+
+                                    <div
+                                        className="absolute inset-0 rounded-full bg-gradient-to-br from-emerald-500/20 to-teal-500/20 backdrop-blur-sm flex items-center justify-center overflow-hidden"
+                                        style={{ backfaceVisibility: 'hidden' }}
+                                    >
+                                        <video src={video} autoPlay loop muted className='w-full h-full object-cover'></video>
                                     </div>
+
                                 </div>
 
-                                {/* Live Waveform */}
-                                <div className="flex items-end gap-0.5 h-10 mb-4">
-                                    {[...Array(30)].map((_, i) => (
-                                        <div
-                                            key={i}
-                                            className="w-1 bg-gradient-to-t from-teal-500 to-emerald-400 rounded-full animate-pulse"
-                                            style={{
-                                                height: `${10 + Math.sin(i * 0.4) * 15 + Math.random() * 10}px`,
-                                                animationDelay: `${i * 40}ms`,
-                                                animationDuration: '0.8s'
-                                            }}
-                                        />
-                                    ))}
+                                {/* Waveform */}
+                                <div className="flex items-end gap-0.5 h-6 mt-3">
+                                    {[...Array(20)].map((_, i) => {
+                                        // Create different wave patterns for each bar
+                                        const waveType = i % 4; // 4 different wave patterns
+                                        const animationClass = `animate-wave-${waveType + 1}`;
+                                        const randomDelay = (Math.random() * 3).toFixed(2);
+                                        const randomDuration = (1 + Math.random() * 3).toFixed(2);
+
+                                        return (
+                                            <div
+                                                key={i}
+                                                className={`w-1 bg-gradient-to-t from-emerald-500 to-teal-400 rounded-full ${animationClass}`}
+                                                style={{
+                                                    animationDelay: `${randomDelay}s`,
+                                                    animationDuration: `${randomDuration}s`
+                                                }}
+                                            />
+                                        );
+                                    })}
                                 </div>
 
-                                <span className="text-emerald-400 text-sm flex items-center gap-2">
-                                    <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                                    Listening...
-                                </span>
-                            </div>
+                                <span className="text-xs text-emerald-400 mt-2">Listening...</span>
 
-                            {/* Controls */}
-                            <div className="flex items-center justify-center gap-4 mb-6">
-                                <button className="px-6 py-3 bg-gradient-to-r from-teal-500 to-emerald-500 text-black font-semibold rounded-full shadow-[0_0_20px_rgba(20,184,166,0.4)] hover:shadow-[0_0_30px_rgba(20,184,166,0.6)] transition-all">
-                                    <Mic className="w-5 h-5" />
-                                </button>
-                                <button className="px-4 py-3 bg-white/5 border border-white/10 text-gray-400 rounded-full hover:bg-white/10 transition-all">
-                                    <Volume2 className="w-5 h-5" />
-                                </button>
-                                <button className="px-4 py-3 bg-white/5 border border-white/10 text-gray-400 rounded-full hover:bg-white/10 transition-all flex items-center gap-2">
-                                    <Languages className="w-4 h-4" />
-                                    <span className="text-sm">EN / Hinglish</span>
-                                </button>
+                                <div className="flex items-center justify-center gap-4 mb-2 mt-6">
+                                    <button className="px-6 py-3 bg-gradient-to-r from-teal-500 to-emerald-500 text-black font-semibold rounded-full shadow-[0_0_20px_rgba(20,184,166,0.4)] hover:shadow-[0_0_30px_rgba(20,184,166,0.6)] transition-all">
+                                        <Mic className="w-5 h-5" />
+                                    </button>
+                                    <button className="px-4 py-3 bg-white/5 border border-white/10 text-gray-400 rounded-full hover:bg-white/10 transition-all">
+                                        <Volume2 className="w-5 h-5" />
+                                    </button>
+                                </div>
                             </div>
 
                             {/* Transcript */}
-                            <div className="bg-black/30 rounded-2xl border border-white/5 p-4 space-y-3">
+                            <div className="bg-black/30 rounded-2xl border border-white/5 p-4 space-y-3 mt-2.5">
                                 <div className="flex items-start gap-2">
                                     <span className="text-xs text-emerald-400 shrink-0">You:</span>
                                     <span className="text-sm text-gray-300">"Can I afford this new phone right now?"</span>

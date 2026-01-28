@@ -60,7 +60,7 @@ const HowItWorks = () => {
                     <h2 className="animate-item text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 opacity-0 translate-y-6 transition-all duration-600">
                         How{' '}
                         <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
-                            RuAI Finance
+                            FinWise
                         </span>{' '}
                         works
                     </h2>

@@ -78,13 +78,6 @@ const SecuritySection = () => {
                         </div>
                     ))}
                 </div>
-
-                {/* Disclaimer */}
-                <div className="animate-item text-center opacity-0 translate-y-6 transition-all duration-600">
-                    <p className="text-xs text-gray-500 bg-white/5 border border-white/5 rounded-full px-6 py-3 inline-block">
-                        *RuAI Finance is an AI assistant and does not provide SEBI-registered investment advice.
-                    </p>
-                </div>
             </div>
         </section>
     );

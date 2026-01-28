@@ -50,25 +50,6 @@ const FinalCTA = () => {
                         </Link>
                     </div>
 
-                    {/* Integration Logos */}
-                    <div className="flex items-center justify-center gap-6 flex-wrap">
-                        <div className="flex items-center gap-2 text-gray-500">
-                            <Smartphone className="w-5 h-5" />
-                            <span className="text-sm">UPI</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-gray-500">
-                            <Building2 className="w-5 h-5" />
-                            <span className="text-sm">Bank accounts</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-gray-500">
-                            <CreditCard className="w-5 h-5" />
-                            <span className="text-sm">Credit cards</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-gray-500">
-                            <FileSpreadsheet className="w-5 h-5" />
-                            <span className="text-sm">Spreadsheets</span>
-                        </div>
-                    </div>
                 </div>
             </div>
         </section>

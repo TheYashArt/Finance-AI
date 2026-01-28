@@ -45,7 +45,7 @@ const FloatingNav = () => {
                                     }`}
                             >
                                 <item.icon size={18} />
-                                <span className={`text-sm font-medium transition-all duration-300 ${active ? 'opacity-100 max-w-[80px]' : 'opacity-0 max-w-0 overflow-hidden'
+                                <span className={`text-sm font-medium transition-all duration-300 whitespace-nowrap ${active ? 'opacity-100' : 'opacity-0 absolute'
                                     }`}>
                                     {item.label}
                                 </span>

@@ -1,9 +1,10 @@
-from fastapi import FastAPI, Depends, HTTPException, Request, APIRouter
+from fastapi import FastAPI, Depends, HTTPException, Request, APIRouter, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 import os
 from dotenv import load_dotenv
+import yfinance as yf
 
-from app.api.v1.routes import categories, transactions, goals, recurring, ai
+from app.api.v1.routes import categories, transactions, goals, recurring, ai, train
 from app.db.database import engine, Base
 
 load_dotenv()
@@ -29,6 +30,7 @@ api_v1_router.include_router(transactions.router, prefix="/transactions", tags=[
 api_v1_router.include_router(goals.router, prefix="/goals", tags=["Goals"])
 api_v1_router.include_router(recurring.router, prefix="/recurring", tags=["Recurring Expenses"])
 api_v1_router.include_router(ai.router, prefix="/ai", tags=["AI"])
+api_v1_router.include_router(train.router, prefix="/train", tags=["Training"])
 
 app.include_router(api_v1_router, prefix="/api/v1")
 
@@ -46,3 +48,18 @@ def health_ready():
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the Finance AI API"}
+
+@app.get("/api/yfinance")
+def yfinance(symbol: str):
+    try:
+        ticket = yf.Ticker(symbol)
+        price = ticket.info
+        if symbol == "GC=F":
+            return round((price["regularMarketPrice"] / 31.1035) * usd_inr(), 2)
+        else:
+            return round(price["regularMarketPrice"], 2)
+    except:
+        return "Network Error"
+def usd_inr():
+    ticker = yf.Ticker("USDINR=X")
+    return ticker.info["regularMarketPrice"]

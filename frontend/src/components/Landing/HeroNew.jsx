@@ -1,9 +1,31 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Sparkles, Shield, Globe, Brain, Play, MessageSquare, Mic } from 'lucide-react';
+import TypingText from './TypingEffect';
+import talkingWomen from '../../assets/talkingWomen.mp4';
+import talkingMan from '../../assets/talkinMan.mp4';
+import video from '../../assets/video.mp4'
 
 const HeroNew = () => {
     const containerRef = useRef(null);
+    const [prices, setPrices] = useState({});
+    const [showWoman, setShowWoman] = useState(true);
+
+    useEffect(() => {
+        get_nse();
+        get_usd();
+        get_nifty();
+        get_gold();
+    }, []);
+
+    // Flip animation between man and woman videos
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setShowWoman(prev => !prev);
+        }, 5000); // Flip every 5 seconds
+
+        return () => clearInterval(interval);
+    }, []);
 
     useEffect(() => {
         const container = containerRef.current;
@@ -34,6 +56,31 @@ const HeroNew = () => {
         return () => particles.forEach(p => p.remove());
     }, []);
 
+    const get_nse = async () => {
+        const response = await fetch('http://localhost:8000/api/yfinance?symbol=RELIANCE.NS');
+        const data = await response.json();
+        setPrices((prev) => ({ ...prev, nse: data }));
+    }
+    const get_usd = async () => {
+        const response = await fetch('http://localhost:8000/api/yfinance?symbol=USDINR=X');
+        const data = await response.json();
+        setPrices((prev) => ({ ...prev, usd: data }));
+    }
+
+    const get_nifty = async () => {
+        const response = await fetch('http://localhost:8000/api/yfinance?symbol=^NSEI');
+        const data = await response.json();
+        setPrices((prev) => ({ ...prev, nifty: data }));
+    }
+
+    const get_gold = async () => {
+        const response = await fetch('http://localhost:8000/api/yfinance?symbol=GC=F');
+        const data = await response.json();
+        setPrices((prev) => ({ ...prev, gold: data }));
+    }
+
+
+
     return (
         <section id="hero" ref={containerRef} className="relative min-h-screen flex items-center pt-20 overflow-hidden">
             {/* Background */}
@@ -59,11 +106,8 @@ const HeroNew = () => {
                         </div>
 
                         {/* Headline */}
-                        <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight mb-6">
-                            <span className="text-white">Your </span>
-                            <span className="bg-gradient-to-r from-emerald-400 via-green-300 to-teal-400 bg-clip-text text-transparent">AI CFO</span>
-                            <br />
-                            <span className="text-white">for Indian Money</span>
+                        <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight mb-6 h-[180px]">
+                            <TypingText speed={80} />
                         </h1>
 
                         {/* Subheadline */}
@@ -73,10 +117,7 @@ const HeroNew = () => {
 
                         {/* Tags */}
                         <div className="flex flex-wrap justify-center lg:justify-start gap-3 mb-10">
-                            <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-full text-sm text-gray-300">
-                                <Shield className="w-4 h-4 text-amber-400" />
-                                RBI-compliant data focus*
-                            </div>
+
                             <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-full text-sm text-gray-300">
                                 <Globe className="w-4 h-4 text-teal-400" />
                                 Real-time web intelligence
@@ -95,10 +136,7 @@ const HeroNew = () => {
                             >
                                 Try the finance AI
                             </Link>
-                            <button className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 font-semibold text-white border border-white/20 rounded-full hover:bg-white/5 transition-all">
-                                <Play className="w-5 h-5" />
-                                Watch 30s demo
-                            </button>
+
                         </div>
                     </div>
 
@@ -136,29 +174,40 @@ const HeroNew = () => {
                                 </div>
 
                                 {/* AI Avatar Face */}
-                                <div className="relative w-24 h-24 mb-4">
+                                <div className="relative w-[150px] h-[150px] mb-4" style={{ perspective: '1000px' }}>
                                     {/* Waveform Ring */}
-                                    <div className="absolute inset-0 rounded-full border-2 border-emerald-500/40 animate-ping" style={{ animationDuration: '2s' }} />
+                                    <div className="absolute inset-0 rounded-full border-2 border-emerald-500/40 animate-subtle-ping" style={{ animationDuration: '2s' }} />
                                     <div className="absolute inset-2 rounded-full border border-teal-500/30 animate-pulse" />
-                                    <div className="absolute inset-4 rounded-full bg-gradient-to-br from-emerald-500/20 to-teal-500/20 backdrop-blur-sm flex items-center justify-center">
-                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-teal-400 flex items-center justify-center text-black text-lg font-bold">
-                                            ₹
-                                        </div>
+
+                                    <div
+                                        className="absolute inset-0 rounded-full bg-gradient-to-br from-emerald-500/20 to-teal-500/20 backdrop-blur-sm flex items-center justify-center overflow-hidden"
+                                        style={{ backfaceVisibility: 'hidden' }}
+                                    >
+                                        <video src={video} autoPlay loop muted className='w-full h-full object-cover'></video>
                                     </div>
+
                                 </div>
 
                                 {/* Waveform */}
                                 <div className="flex items-end gap-0.5 h-6">
-                                    {[...Array(20)].map((_, i) => (
-                                        <div
-                                            key={i}
-                                            className="w-1 bg-gradient-to-t from-emerald-500 to-teal-400 rounded-full animate-pulse"
-                                            style={{
-                                                height: `${8 + Math.sin(i * 0.5) * 10 + Math.random() * 6}px`,
-                                                animationDelay: `${i * 50}ms`
-                                            }}
-                                        />
-                                    ))}
+                                    {[...Array(20)].map((_, i) => {
+                                        // Create different wave patterns for each bar
+                                        const waveType = i % 4; // 4 different wave patterns
+                                        const animationClass = `animate-wave-${waveType + 1}`;
+                                        const randomDelay = (Math.random() * 3).toFixed(2);
+                                        const randomDuration = (1 + Math.random() * 3).toFixed(2);
+
+                                        return (
+                                            <div
+                                                key={i}
+                                                className={`w-1 bg-gradient-to-t from-emerald-500 to-teal-400 rounded-full ${animationClass}`}
+                                                style={{
+                                                    animationDelay: `${randomDelay}s`,
+                                                    animationDuration: `${randomDuration}s`
+                                                }}
+                                            />
+                                        );
+                                    })}
                                 </div>
 
                                 <span className="text-xs text-emerald-400 mt-2">Listening...</span>
@@ -168,19 +217,20 @@ const HeroNew = () => {
                             <div className="col-span-2 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl px-5 py-3 flex items-center justify-between">
                                 <div className="text-center">
                                     <p className="text-xs text-gray-500">NSE</p>
-                                    <p className="text-sm text-emerald-400">+1.24%</p>
+                                    <p className="text-sm text-emerald-400">{prices.nse}
+                                    </p>
                                 </div>
                                 <div className="text-center">
                                     <p className="text-xs text-gray-500">₹/USD</p>
-                                    <p className="text-sm text-gray-300">83.42</p>
+                                    <p className="text-sm text-gray-300">{prices.usd}</p>
                                 </div>
                                 <div className="text-center">
                                     <p className="text-xs text-gray-500">Gold</p>
-                                    <p className="text-sm text-amber-400">₹72,450</p>
+                                    <p className="text-sm text-amber-400">{(prices.gold !== "Network Error") ? (<p>{prices.gold}/g </p>) : <p>Network Error</p>} </p>
                                 </div>
                                 <div className="text-center">
                                     <p className="text-xs text-gray-500">Nifty 50</p>
-                                    <p className="text-sm text-emerald-400">21,890</p>
+                                    <p className="text-sm text-emerald-400">{prices.nifty}</p>
                                 </div>
                             </div>
                         </div>
@@ -202,6 +252,68 @@ const HeroNew = () => {
                     25% { transform: translateY(-15px) translateX(10px) rotate(5deg); opacity: 0.5; }
                     50% { transform: translateY(-25px) translateX(-5px) rotate(-3deg); opacity: 0.6; }
                     75% { transform: translateY(-10px) translateX(-10px) rotate(3deg); opacity: 0.4; }
+                }
+                
+                @keyframes subtle-ping {
+                    0% {
+                        transform: scale(1);
+                        opacity: 1;
+                    }
+                    75%, 100% {
+                        transform: scale(1.30);
+                        opacity: 0;
+                    }
+                }
+                
+                .animate-subtle-ping {
+                    animation: subtle-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+                }
+                
+                @keyframes wave-1 {
+                    0%, 100% { height: 6px; }
+                    25% { height: 18px; }
+                    50% { height: 12px; }
+                    75% { height: 22px; }
+                }
+                
+                @keyframes wave-2 {
+                    0%, 100% { height: 10px; }
+                    20% { height: 24px; }
+                    40% { height: 8px; }
+                    60% { height: 20px; }
+                    80% { height: 14px; }
+                }
+                
+                @keyframes wave-3 {
+                    0%, 100% { height: 8px; }
+                    30% { height: 16px; }
+                    50% { height: 24px; }
+                    70% { height: 10px; }
+                }
+                
+                @keyframes wave-4 {
+                    0%, 100% { height: 12px; }
+                    15% { height: 20px; }
+                    35% { height: 8px; }
+                    55% { height: 24px; }
+                    75% { height: 14px; }
+                    90% { height: 18px; }
+                }
+                
+                .animate-wave-1 {
+                    animation: wave-1 ease-in-out infinite;
+                }
+                
+                .animate-wave-2 {
+                    animation: wave-2 ease-in-out infinite;
+                }
+                
+                .animate-wave-3 {
+                    animation: wave-3 ease-in-out infinite;
+                }
+                
+                .animate-wave-4 {
+                    animation: wave-4 ease-in-out infinite;
                 }
             `}</style>
         </section>

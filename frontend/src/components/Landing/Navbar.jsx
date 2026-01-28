@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
+import image from '../../assets/logo_final.png';
 
 const Navbar = () => {
     const [isScrolled, setIsScrolled] = useState(false);
@@ -34,10 +35,12 @@ const Navbar = () => {
 
                     {/* Logo */}
                     <Link to="/" className="flex items-center gap-3 group">
-                        <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 via-green-500 to-teal-400 flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.4)] group-hover:shadow-[0_0_30px_rgba(16,185,129,0.6)] transition-shadow">
-                            <span className="text-black font-bold text-sm">₹AI</span>
+                        <div>
+                            <span className="text-black font-bold text-sm">
+                                <img src={image} alt="FinnWise" width={200}/>
+                            </span>
                         </div>
-                        <span className="text-white font-semibold text-lg hidden sm:block">RuAI Finance</span>
+                        {/* <span className="text-white font-semibold text-lg hidden sm:block">FinnWise</span> */}
                     </Link>
 
                     {/* Desktop Menu */}

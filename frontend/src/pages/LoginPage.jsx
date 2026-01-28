@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, Eye, EyeOff, ArrowRight, User } from 'lucide-react';
 import BackgroundAnimation from '../components/BackgroundAnimation';
+import image from '../assets/logo.png'
 
 const LoginPage = () => {
     const navigate = useNavigate();
@@ -23,9 +24,19 @@ const LoginPage = () => {
         setTimeout(() => {
             if (password === CORRECT_PASSWORD) {
                 // Store login state and name in localStorage
-                localStorage.setItem('isLoggedIn', 'true');
-                localStorage.setItem('userName', name || 'User'); // Default to 'User' if empty
-                navigate('/menu');
+                if (name === 'admin') {
+                    localStorage.setItem('isAdmin', 'true');
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('userName', name || 'User');
+                    navigate('/menu');
+                }
+                else{
+                    localStorage.setItem('isAdmin', 'false');
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('userName', name || 'User'); // Default to 'User' if empty
+                    navigate('/menu');
+                }
+                
             } else {
                 setError('Incorrect password. Try again.');
                 setIsLoading(false);
@@ -43,11 +54,10 @@ const LoginPage = () => {
 
                     {/* Logo */}
                     <div className="flex flex-col items-center mb-8">
-                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 via-green-500 to-teal-400 flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.4)] mb-4">
-                            <span className="text-black font-bold text-xl">₹AI</span>
+                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br flex items-center justify-center  mb-4">
+                            <img src={image} alt="Logo" className="w-full h-full object-contain" />
                         </div>
                         <h1 className="text-2xl font-bold text-white">Welcome Back</h1>
-                        <p className="text-gray-400 text-sm mt-1">Enter your details to continue</p>
                     </div>
 
                     {/* Form */}
@@ -78,7 +88,7 @@ const LoginPage = () => {
                                     type={showPassword ? 'text' : 'password'}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="Enter your password"
+                                    placeholder="ruai2024"
                                     className="w-full pl-12 pr-12 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/30 transition-all"
                                 />
                                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
@@ -118,12 +128,15 @@ const LoginPage = () => {
                         </button>
                     </form>
 
+                    <div className="text-center text-white text-xs mt-4">
+                        By Logging in I accept the <span onClick={() => navigate('/terms-of-service')} className='text-emerald-500 hover:text-emerald-400 px-1 cursor-pointer'>Terms of Service</span> and <span onClick={() => navigate('/privacy-policy')} className='text-emerald-500 hover:text-emerald-400 px-1 cursor-pointer'>Privacy Policy</span>
+                    </div>
                     {/* Hint */}
-                    <div className="mt-6 text-center">
+                    {/* <div className="mt-6 text-center">
                         <p className="text-xs text-gray-500">
                             Hint: The password is <span className="text-emerald-400/60">ruai2024</span>
                         </p>
-                    </div>
+                    </div> */}
                 </div>
 
                 {/* Decorative Elements */}

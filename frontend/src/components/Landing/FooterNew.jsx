@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Sparkles, Github, Twitter, Linkedin, Mail, IndianRupee } from 'lucide-react';
+import image from '../../assets/logo_final_footer.png'
 
 const FooterNew = () => {
     return (
@@ -17,10 +18,8 @@ const FooterNew = () => {
                     {/* Brand */}
                     <div className="md:col-span-2">
                         <Link to="/" className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 via-green-500 to-teal-400 flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.4)]">
-                                <span className="text-black font-bold text-sm">₹AI</span>
-                            </div>
-                            <span className="text-xl font-bold text-white">RuAI Finance</span>
+
+                            <img src={image} alt="" width={100} />
                         </Link>
                         <p className="text-gray-400 text-sm leading-relaxed max-w-sm mb-4">
                             Your AI-powered financial companion. Master your wealth with intelligent insights tailored for India.
@@ -50,12 +49,6 @@ const FooterNew = () => {
                                 <Github className="w-5 h-5" />
                             </a>
                             <a href="#" className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-emerald-400 hover:border-emerald-500/30 transition-all">
-                                <Twitter className="w-5 h-5" />
-                            </a>
-                            <a href="#" className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-emerald-400 hover:border-emerald-500/30 transition-all">
-                                <Linkedin className="w-5 h-5" />
-                            </a>
-                            <a href="#" className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-emerald-400 hover:border-emerald-500/30 transition-all">
                                 <Mail className="w-5 h-5" />
                             </a>
                         </div>
@@ -65,10 +58,10 @@ const FooterNew = () => {
 
                 {/* Copyright */}
                 <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-500">
-                    <p>© 2026 RuAI Finance. All rights reserved.</p>
+                    <p>© 2026 FinWise. All rights reserved.</p>
                     <div className="flex items-center gap-6">
-                        <a href="#" className="hover:text-gray-300 transition-colors">Privacy Policy</a>
-                        <a href="#" className="hover:text-gray-300 transition-colors">Terms of Service</a>
+                        <Link to="/privacy-policy" className="hover:text-gray-300 transition-colors">Privacy Policy</Link>
+                        <Link to="/terms-of-service" className="hover:text-gray-300 transition-colors">Terms of Service</Link>
                     </div>
                 </div>
             </div>
