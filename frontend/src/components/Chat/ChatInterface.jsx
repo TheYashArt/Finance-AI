@@ -88,7 +88,7 @@ const ChatInterface = () => {
                 <span className='text-[#33A8A1] text-3xl'>Fin</span><span className='text-3xl'>Wise</span>
                 <br />
                 <span className='text-xl'>
-                    Rag Chatbot
+                    Chat
                 </span>
             </div>
             <div className='flex pt-24 relative' style={{ minHeight: 'calc(100vh - 6rem)' }}>

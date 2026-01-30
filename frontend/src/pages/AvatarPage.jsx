@@ -63,7 +63,7 @@ const AvatarPage = () => {
                 <span className='text-[#33A8A1] text-3xl'>Fin</span><span className='text-3xl'>Wise</span>
                 <br />
                 <span className='text-xl'>
-                    AI Voice
+                    Avatar
                 </span>
             </div>
 
@@ -97,6 +97,7 @@ const AvatarPage = () => {
                         handpos={ismale ? 1.3 : 1.15}
                         ischatting={ischatting}
                     />
+                    {/* Use this to rotate the model using mouse pointer */}
                     {/* <OrbitControls /> */}
                 </Canvas>
 

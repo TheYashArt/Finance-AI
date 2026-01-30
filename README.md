@@ -127,6 +127,9 @@ npm run dev
 
 ---
 
+## 💡 tips 
+- **Frontend**: Use login name 'admin' to access the training page
+
 ## 💡 Tech Stack
 - **Frontend**: React, Tailwind CSS v4, Zustand, Recharts, Lucide React.
 - **Backend**: FastAPI, SQLAlchemy (SQLite), Ollama.

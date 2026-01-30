@@ -31,7 +31,7 @@ const TrackerLayout = () => {
                 <span className='text-[#33A8A1] text-3xl'>Fin</span><span className='text-3xl'>Wise</span>
                 <br />
                 <span className='text-xl'>
-                    Dashboard
+                    Tracker
                 </span>
             </div>
 

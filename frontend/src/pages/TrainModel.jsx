@@ -35,7 +35,18 @@ const TrainModel = () => {
     return (
         <div className="min-h-screen text-white p-6 md:p-12 relative overflow-hidden">
             <BackgroundAnimation />
-
+            <div className="absolute inset-0 pointer-events-none">
+                {/* Left green glow */}
+                <div className="absolute top-[5%] left-[2%] w-[320px] h-[320px] 
+    bg-emerald-400/25 rounded-full blur-[150px] " />
+                <div className="absolute top-[65%] left-[15%] w-[450px] h-[300px] 
+    bg-emerald-400/30 rounded-full blur-[150px]" />
+                <div className="absolute top-[55%] right-[30%] w-[450px] h-[300px] 
+    bg-blue-400/30 rounded-full blur-[150px]" />
+                {/* Center lime glow */}
+                <div className="absolute bottom-[10%] right-[5%] w-[300px] h-[300px] 
+    bg-emerald-400/30 rounded-full blur-[90px]" />
+            </div>
             <div className="relative z-10 max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8">
@@ -48,10 +59,16 @@ const TrainModel = () => {
                         </Link>
                         <div>
                             <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 flex items-center gap-3">
-                                <Brain className="w-8 h-8 text-emerald-400" />
-                                Model Training
+                                {/* <Brain className="w-8 h-8 text-emerald-400" /> */}
+                                <div className=''>
+                                    <span className='text-[#33A8A1] text-4xl'>Fin</span><span className='text-4xl'>Wise</span>
+                                    <br />
+                                    <span className='text-2xl font-light'>
+                                        Train
+                                    </span>
+                                </div>
                             </h1>
-                            <p className="text-gray-400">Fine-tune AI models with your financial data</p>
+                            {/* <p className="text-gray-400">Fine-tune AI models with your financial data</p> */}
                         </div>
                     </div>
 
