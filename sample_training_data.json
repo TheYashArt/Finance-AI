@@ -1,0 +1,42 @@
+[
+    {
+        "prompt": "What is a good savings rate?",
+        "response": "A good savings rate in India is typically 20-30% of your monthly income. This allows you to build an emergency fund and invest for future goals."
+    },
+    {
+        "prompt": "How much emergency fund should I have?",
+        "response": "You should maintain an emergency fund covering 6-12 months of your essential expenses. This provides a financial cushion for unexpected situations."
+    },
+    {
+        "prompt": "What are the best investment options in India?",
+        "response": "Popular investment options in India include: PPF (Public Provident Fund), Mutual Funds, Fixed Deposits, National Pension System (NPS), and Equity markets. Choose based on your risk appetite and financial goals."
+    },
+    {
+        "prompt": "How can I reduce my expenses?",
+        "response": "Track all expenses, create a budget, cut unnecessary subscriptions, cook at home more often, use public transport when possible, and avoid impulse purchases."
+    },
+    {
+        "prompt": "What is the 50-30-20 rule?",
+        "response": "The 50-30-20 rule suggests allocating 50% of income to needs, 30% to wants, and 20% to savings and debt repayment. It's a simple budgeting framework."
+    },
+    {
+        "prompt": "Should I invest in gold?",
+        "response": "Gold can be part of a diversified portfolio (5-10%). Consider Sovereign Gold Bonds or Gold ETFs instead of physical gold for better returns and lower costs."
+    },
+    {
+        "prompt": "How to plan for retirement in India?",
+        "response": "Start early with NPS, PPF, or mutual funds. Aim to save 15-20% of income for retirement. Consider inflation and healthcare costs in your planning."
+    },
+    {
+        "prompt": "What is SIP in mutual funds?",
+        "response": "SIP (Systematic Investment Plan) allows you to invest a fixed amount regularly in mutual funds. It helps with rupee cost averaging and disciplined investing."
+    },
+    {
+        "prompt": "How to manage credit card debt?",
+        "response": "Pay more than the minimum due, prioritize high-interest debt first, avoid new charges, consider balance transfer to lower interest cards, and create a repayment plan."
+    },
+    {
+        "prompt": "What are tax-saving investment options?",
+        "response": "Under Section 80C: PPF, ELSS mutual funds, NSC, tax-saver FDs, life insurance premiums. Under 80D: health insurance premiums. NPS offers additional deduction under 80CCD(1B)."
+    }
+]

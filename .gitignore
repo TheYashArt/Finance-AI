@@ -13,6 +13,9 @@ dist/
 *.log
 npm-debug.log*
 
+#datasets
+uploads/
+
 # IDEs
 .vscode/
 .idea/

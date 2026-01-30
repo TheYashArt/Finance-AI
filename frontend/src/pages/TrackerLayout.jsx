@@ -23,14 +23,36 @@ const TrackerLayout = () => {
     };
 
     return (
-        <div className="flex h-screen w-full overflow-hidden bg-[#030303]">
+        <div className="flex relative h-screen w-full overflow-hidden bg-[#030303]">
             {/* Top Navigation for major sections */}
             <FloatingNav />
+
+            <div className='absolute text-white top-5 left-5 z-100'>
+                <span className='text-[#33A8A1] text-3xl'>Fin</span><span className='text-3xl'>Wise</span>
+                <br />
+                <span className='text-xl'>
+                    Dashboard
+                </span>
+            </div>
+
+
+            <div className="absolute inset-0 pointer-events-none">
+                {/* Left green glow */}
+                <div className="absolute top-[5%] left-[2%] w-[320px] h-[320px] 
+    bg-emerald-400/25 rounded-full blur-[150px] " />
+                <div className="absolute top-[65%] left-[15%] w-[450px] h-[300px] 
+    bg-emerald-400/30 rounded-full blur-[150px]" />
+                <div className="absolute top-[55%] right-[30%] w-[450px] h-[300px] 
+    bg-blue-400/30 rounded-full blur-[150px]" />
+                {/* Center lime glow */}
+                <div className="absolute bottom-[10%] right-[5%] w-[300px] h-[300px] 
+    bg-emerald-400/30 rounded-full blur-[90px]" />
+            </div>
 
             {/* Sidebar for Tracker sub-pages */}
             <aside className="hidden lg:flex flex-col w-64 bg-black/40 backdrop-blur-xl border-r border-white/5 pt-20">
                 {/* Logo */}
-                <div className="p-6 border-b border-white/5">
+                {/* <div className="p-6 border-b border-white/5">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.3)]">
                             <span className="text-white font-bold text-sm">₹</span>
@@ -40,10 +62,10 @@ const TrackerLayout = () => {
                             <p className="text-xs text-gray-500">AI-Powered</p>
                         </div>
                     </div>
-                </div>
+                </div> */}
 
                 {/* Navigation */}
-                <nav className="flex-1 p-4 space-y-2">
+                <nav className="flex-1 p-4 space-y-2 mt-20">
                     {sidebarItems.map((item) => {
                         const active = isActive(item.path);
                         return (

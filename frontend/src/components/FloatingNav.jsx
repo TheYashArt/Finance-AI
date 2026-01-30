@@ -25,7 +25,7 @@ const FloatingNav = () => {
                 {/* Back to Menu - Left */}
                 <Link
                     to="/menu"
-                    className="flex items-center gap-2 px-4 py-2.5 bg-black/60 backdrop-blur-2xl border border-white/10 rounded-full text-gray-400 hover:text-emerald-400 hover:bg-white/5 transition-all shrink-0"
+                    className="flex items-center gap-2 px-4 py-2.5 h-[58px] bg-black/60 backdrop-blur-2xl border border-white/10 rounded-full text-gray-400 hover:text-emerald-400 hover:bg-white/5 transition-all shrink-0"
                 >
                     <ArrowLeft size={18} />
                     <span className="text-sm hidden sm:inline">Menu</span>

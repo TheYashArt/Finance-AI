@@ -9,8 +9,7 @@ const ChatSidebar = () => {
     const [editingSessionId, setEditingSessionId] = useState(null);
     const [editedTitle, setEditedTitle] = useState('');
     const { sessions, currentSessionId, fetchSessions, createNewSession, selectSession, deleteSession, updateSessionTitle } = useChatStore();
-    const [isadmin, setIsadmin] = useState(localStorage.getItem("isAdmin"))
-    const [file, setFile] = useState(null)
+
     const nav = useNavigate()
 
     useEffect(() => {
@@ -113,20 +112,8 @@ const ChatSidebar = () => {
     }
 
     return (
-        <div className="w-full h-[calc(100vh-7.5rem)] bg-black/20 backdrop-blur-xl border border-white/10 rounded-l-3xl shadow-2xl flex flex-col overflow-hidden relative">
-            <div className="flex justify-end py-2.5 z-10">
-                {
-                    isadmin && <button
-                        onClick={() => {
-                            nav('/train-model')
-                        }}
-                        className="bg-emerald-500/10 cursor-pointer hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-full py-1.5 px-3 flex items-center gap-1.5 transition-all text-xs font-medium hover:shadow-[0_0_15px_rgba(16,185,129,0.2)]"
-                    >
-                        <span>Train Model</span>
-                    </button>
-                }
+        <div className="w-full h-[calc(100vh-6.1rem)] bg-black/20 backdrop-blur-xl border border-white/10 rounded-l-3xl shadow-2xl flex flex-col overflow-hidden relative">
 
-            </div>
             <div className="absolute top-[2%] right-[-25%] w-[250px] h-[250px] 
     bg-green-500/20 rounded-full blur-[50px]" />
             <div className="absolute top-[-95px] left-[-55px] w-[250px] h-[250px] 

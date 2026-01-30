@@ -25,18 +25,18 @@ const LoginPage = () => {
             if (password === CORRECT_PASSWORD) {
                 // Store login state and name in localStorage
                 if (name === 'admin') {
-                    localStorage.setItem('isAdmin', 'true');
-                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('isAdmin', "true");
+                    localStorage.setItem('isLoggedIn', "true");
                     localStorage.setItem('userName', name || 'User');
                     navigate('/menu');
                 }
-                else{
-                    localStorage.setItem('isAdmin', 'false');
-                    localStorage.setItem('isLoggedIn', 'true');
+                else {
+                    localStorage.setItem('isAdmin', "false");
+                    localStorage.setItem('isLoggedIn', "true");
                     localStorage.setItem('userName', name || 'User'); // Default to 'User' if empty
                     navigate('/menu');
                 }
-                
+
             } else {
                 setError('Incorrect password. Try again.');
                 setIsLoading(false);
@@ -54,8 +54,14 @@ const LoginPage = () => {
 
                     {/* Logo */}
                     <div className="flex flex-col items-center mb-8">
-                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br flex items-center justify-center  mb-4">
-                            <img src={image} alt="Logo" className="w-full h-full object-contain" />
+                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br flex items-center justify-center  mb-4 cursor-pointer">
+                            <img
+                                onClick={() => {
+                                    navigate("/")
+                                }} 
+                                src={image} 
+                                alt="Logo" 
+                                className="w-full h-full object-contain" />
                         </div>
                         <h1 className="text-2xl font-bold text-white">Welcome Back</h1>
                     </div>

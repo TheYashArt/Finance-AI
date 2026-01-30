@@ -2,7 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Mic, MessageSquare, TrendingUp, ArrowUpRight, Wallet, ArrowRight } from 'lucide-react';
 import { getTransactions } from '../services/api';
+import image from "../assets/logo.png"
 import BackgroundAnimation from '../components/BackgroundAnimation';
+import video from "../assets/video.mp4"
+import TypingText from '../components/Landing/TypingEffect';
+import ChatShowcase from '../components/Landing/ChatShowcase';
+import FinanceGraph from '../components/Landing/FinanceGraph';
 
 // --- Premium 3D Orb Component ---
 const Orb = () => {
@@ -59,14 +64,14 @@ const MenuPage = () => {
     const balance = totalIncome - totalExpense;
 
     return (
-        <div className="min-h-screen text-white p-6 md:p-12 flex flex-col items-center font-sans selection:bg-emerald-500/30 relative overflow-hidden">
+        <div className="h-screen w-full text-white p-6 md:p-12 flex flex-col items-center font-sans selection:bg-emerald-500/30 relative overflow-hidden">
             <BackgroundAnimation />
 
             {/* Header / Greeting */}
             <div className="relative z-10 w-full max-w-6xl flex justify-between items-end mb-8 md:mb-12">
                 <div>
-                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
-                        {greeting}, <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500">{userName}</span>
+                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-2 flex">
+                        <img src={image} alt="" width={50} height={50} className="mr-2" /> {greeting}, <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500">{userName}</span>
                     </h1>
                     <p className="text-gray-400 text-lg">Here's your financial overview for today.</p>
                 </div>
@@ -76,6 +81,7 @@ const MenuPage = () => {
                     onClick={() => {
                         localStorage.removeItem('isLoggedIn');
                         localStorage.removeItem('userName');
+                        localStorage.setItem('isAdmin', false);
                         window.location.href = '/login';
                     }}
                     className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/5 rounded-full text-sm font-medium text-gray-400 hover:text-white transition-all backdrop-blur-md"
@@ -85,10 +91,10 @@ const MenuPage = () => {
             </div>
 
             {/* Main Grid */}
-            <div className="relative z-10 w-full max-w-6xl grid grid-cols-1 md:grid-cols-12 gap-6 h-auto md:h-[600px]">
+            <div className="relative z-10 w-full max-w-6xl grid grid-cols-1 md:grid-cols-12 gap-6 max-h-[600px] md:h-[500px]">
 
                 {/* --- CARD 1: AI AVATAR (Left, Tall) --- */}
-                <Link to="/avatar" className="md:col-span-4 group relative h-full">
+                <Link to="/avatar" className="md:col-span-4 group relative h-[calc(100%-80px)]">
                     <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 to-transparent rounded-[2rem] -z-10" />
                     <div className="h-full bg-[#0A0A0A]/60 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-8 flex flex-col justify-between hover:border-emerald-500/30 transition-all duration-500 group-hover:shadow-[0_0_50px_rgba(16,185,129,0.1)]">
                         <div>
@@ -102,8 +108,21 @@ const MenuPage = () => {
                             <p className="text-gray-400 leading-relaxed">Have a natural conversation with your personal finance assistant.</p>
                         </div>
 
-                        <div className="flex-1 py-8">
-                            <Orb />
+                        <div className="relative w-[150px] h-[150px] mb-4 items-center justify-center flex mx-auto" style={{ perspective: '1000px' }}>
+                            {/* Waveform Ring */}
+                            <div className="w-full h-full flex justify-center items-center">
+
+                                <div className="absolute inset-0 rounded-full border-2 border-emerald-500/40 animate-subtle-ping" style={{ animationDuration: '2s' }} />
+                                <div className="absolute inset-2 rounded-full border border-teal-500/30 animate-pulse" />
+
+                                <div
+                                    className="absolute inset-0 w-full rounded-full bg-gradient-to-br from-emerald-500/20 to-teal-500/20 backdrop-blur-sm flex items-center justify-center overflow-hidden"
+                                    style={{ backfaceVisibility: 'hidden' }}
+                                >
+                                    <video src={video} autoPlay loop muted className='w-full h-full object-cover'></video>
+                                </div>
+                            </div>
+
                         </div>
 
                         <div className="flex items-center gap-3 text-sm font-medium text-emerald-400">
@@ -111,7 +130,7 @@ const MenuPage = () => {
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                             </span>
-                            Always Listening
+                            Live
                         </div>
                     </div>
                 </Link>
@@ -121,8 +140,11 @@ const MenuPage = () => {
 
                     {/* --- CARD 2: FINANCE TRACKER (Top Right) --- */}
                     <Link to="/tracker" className="group relative">
-                        <div className="h-full bg-[#0A0A0A]/60 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-8 flex flex-col justify-between hover:border-emerald-500/30 transition-all duration-500 group-hover:shadow-[0_0_50px_rgba(16,185,129,0.1)]">
-                            <div className="flex justify-between items-start">
+                        <div className="h-full relative bg-[#0A0A0A]/60 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-8 flex flex-col justify-between hover:border-emerald-500/30 transition-all duration-500 group-hover:shadow-[0_0_50px_rgba(16,185,129,0.1)] overflow-hidden">
+                            {/* Graph Animation in Background */}
+                            <FinanceGraph />
+
+                            <div className="flex justify-between items-start relative z-10">
                                 <div>
                                     <div className="flex items-center gap-3 mb-4">
                                         <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 border border-emerald-500/20">
@@ -139,7 +161,7 @@ const MenuPage = () => {
                             </div>
 
                             {/* Mini Stats Grid */}
-                            <div className="grid grid-cols-2 gap-4 mt-8">
+                            <div className="grid grid-cols-2 gap-4 mt-8 relative z-10">
                                 <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] transition-colors">
                                     <div className="flex items-center gap-2 mb-2 text-emerald-400">
                                         <TrendingUp size={16} />
@@ -160,8 +182,11 @@ const MenuPage = () => {
 
                     {/* --- CARD 3: RAG CHATBOT (Bottom Right) --- */}
                     <Link to="/chat" className="group relative">
-                        <div className="h-full bg-[#0A0A0A]/60 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-8 flex items-center justify-between hover:border-emerald-500/30 transition-all duration-500 group-hover:shadow-[0_0_50px_rgba(16,185,129,0.1)]">
-                            <div className="max-w-md">
+                        <div className="h-[230px] relative bg-[#0A0A0A]/60 backdrop-blur-4xl border border-white/10 rounded-[2rem] p-8 flex items-center justify-between hover:border-emerald-500/30 transition-all duration-500 group-hover:shadow-[0_0_50px_rgba(16,185,129,0.1)] overflow-hidden">
+                            {/* Chat Showcase in Background */}
+                            <ChatShowcase />
+
+                            <div className="max-w-md relative z-10">
                                 <div className="flex items-center gap-3 mb-4">
                                     <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 border border-emerald-500/20">
                                         <MessageSquare size={20} />
@@ -175,9 +200,8 @@ const MenuPage = () => {
                             </div>
 
                             {/* Visual Element */}
-                            <div className="hidden md:flex h-32 w-32 items-center justify-center relative">
+                            <div className="hidden md:flex h-32 w-32 items-center justify-center relative z-10">
                                 <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                                <MessageSquare size={64} className="text-white/10 group-hover:text-emerald-400/50 transition-colors duration-500" />
                                 <div className="absolute bottom-0 right-0 p-3 bg-emerald-500 rounded-2xl text-black shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">
                                     <ArrowRight size={24} />
                                 </div>
@@ -187,6 +211,23 @@ const MenuPage = () => {
 
                 </div>
             </div>
+            <style>
+                {
+                    `.animate-subtle-ping {
+                    animation: subtle-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+                }
+                    @keyframes subtle-ping {
+                    0% {
+                        transform: scale(1);
+                        opacity: 0.4;
+                    }
+                    75%, 100% {
+                        transform: scale(1.5);
+                        opacity: 0;
+                    }
+                }`
+                }
+            </style>
         </div>
     );
 };

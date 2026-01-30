@@ -12,6 +12,7 @@ from app.models.transaction import Transaction
 from app.models.goal import Goal
 from app.models.category import Category
 from app.models.recurring import RecurringExpense
+from app.models.training_job import TrainingJob
 
 if __name__ == "__main__":
     print("Creating database tables...")

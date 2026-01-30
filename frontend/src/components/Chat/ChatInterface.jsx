@@ -1,14 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Loader2, Bot, User, Sparkles } from 'lucide-react';
+import { Send, Loader2, Bot, User, Sparkles, Upload } from 'lucide-react';
 import { useChatStore } from '../../store/useChatStore';
 import ChatSidebar from './ChatSidebar';
 import FloatingNav from '../FloatingNav';
+import { useNavigate } from 'react-router-dom';
 
 const ChatInterface = () => {
     const { messages = [], isLoading, sendMessage, currentSessionId } = useChatStore();
     const [input, setInput] = useState('');
     const [ischatting, setIschatting] = useState(false)
+    const [isAdmin, setIsAdmin] = useState(localStorage.getItem('isAdmin'))
     const messagesEndRef = useRef(null);
+    const nav = useNavigate()
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -51,6 +54,19 @@ const ChatInterface = () => {
                     Click here to upload
                 </button>
             </div> */}
+            <div className="flex justify-end py-2.5 absolute top-5 right-5 z-100">
+                {
+                    isAdmin === "true" ? <button
+                        onClick={() => {
+                            nav('/train-model')
+                        }}
+                        className="bg-emerald-500/10 cursor-pointer hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-full py-1.5 px-3 flex items-center gap-1.5 transition-all text-xs font-medium hover:shadow-[0_0_15px_rgba(16,185,129,0.2)]"
+                    >
+                        <Upload size={20} />
+                    </button> : <></>
+                }
+
+            </div>
             {/* Ambient background glow */}
             <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none"></div>
             <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-green-500/5 rounded-full blur-[120px] pointer-events-none"></div>
@@ -68,10 +84,17 @@ const ChatInterface = () => {
     bg-blue-400/30 rounded-full blur-[95px]" />
             </div>
             <FloatingNav />
-            <div className='flex pt-24 pb-6 relative' style={{ minHeight: 'calc(100vh - 6rem)' }}>
+            <div className='absolute text-white top-5 left-5'>
+                <span className='text-[#33A8A1] text-3xl'>Fin</span><span className='text-3xl'>Wise</span>
+                <br />
+                <span className='text-xl'>
+                    Rag Chatbot
+                </span>
+            </div>
+            <div className='flex pt-24 relative' style={{ minHeight: 'calc(100vh - 6rem)' }}>
                 {/* Main Chat Container - Centered with Glass Effect */}
                 <div className="flex-1 flex items-center justify-center relative">
-                    <div className="w-[1000px] h-[calc(100vh-7.5rem)] bg-black/20 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl flex flex-col relative overflow-hidden">
+                    <div className="w-[1000px] h-[calc(100vh-6.1rem)] bg-black/20 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl flex flex-col relative overflow-hidden">
                         {/* Subtle inner glow */}
                         <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 via-transparent to-transparent pointer-events-none"></div>
                         {/* Conditional Layout based on chatting state */}
@@ -199,7 +222,7 @@ const ChatInterface = () => {
                                                     {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
                                                 </button>
 
-                                                
+
                                             </div>
                                         </div>
                                     </form>

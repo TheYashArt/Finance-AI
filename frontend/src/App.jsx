@@ -12,6 +12,7 @@ import TermsOfService from './pages/TermsOfService';
 import ChatPage from './pages/ChatPage';
 import AvatarPage from './pages/AvatarPage';
 import TrackerLayout from './pages/TrackerLayout';
+import TrainModel from './pages/TrainModel';
 
 // Tracker Sub-pages
 import Dashboard from './routes/Dashboard';
@@ -51,6 +52,11 @@ function App() {
         <Route path="/chat" element={
           <ProtectedRoute>
             <ChatPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/train-model" element={
+          <ProtectedRoute>
+            <TrainModel />
           </ProtectedRoute>
         } />
 

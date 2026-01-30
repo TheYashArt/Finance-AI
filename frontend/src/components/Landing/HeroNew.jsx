@@ -18,15 +18,6 @@ const HeroNew = () => {
         get_gold();
     }, []);
 
-    // Flip animation between man and woman videos
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setShowWoman(prev => !prev);
-        }, 5000); // Flip every 5 seconds
-
-        return () => clearInterval(interval);
-    }, []);
-
     useEffect(() => {
         const container = containerRef.current;
         if (!container) return;
