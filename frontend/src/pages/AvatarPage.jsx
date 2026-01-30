@@ -144,7 +144,7 @@ const AvatarPage = () => {
                                 Good Morning! How can I assist you?
                             </h2>
                             <p className="text-sm text-gray-400 font-light max-w-md mb-12">
-                                Start your request, and let Orion handle everything
+                                Start your request, and let FinWise handle everything
                             </p>
 
                             {/* Centered Input Form */}
@@ -156,7 +156,7 @@ const AvatarPage = () => {
                                                 type="text"
                                                 value={input}
                                                 onChange={(e) => setInput(e.target.value)}
-                                                placeholder="Start your request, and let Orion handle everything"
+                                                placeholder="Start your request, and let FinWise handle everything"
                                                 className="w-full bg-transparent border-none text-white placeholder-gray-500 py-3 focus:outline-none text-sm"
                                                 disabled={isLoading}
                                             />
@@ -233,7 +233,7 @@ const AvatarPage = () => {
                                                 type="text"
                                                 value={input}
                                                 onChange={(e) => setInput(e.target.value)}
-                                                placeholder="Start your request, and let Orion handle everything"
+                                                placeholder="Start your request, and let FinWise handle everything"
                                                 className="w-full bg-transparent border-none text-white placeholder-gray-500 py-3 focus:outline-none text-sm"
                                                 disabled={isLoading}
                                             />
