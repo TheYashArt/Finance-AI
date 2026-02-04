@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+.ipynb_checkpoints/
+
+# Node/Frontend
+node_modules/
+dist/
+.DS_Store
+*.log
+npm-debug.log*
+
+#datasets
+uploads/
+generated_audio/
+
+# IDEs
+.vscode/
+.idea/
+
+# Database
+instance/
+*.db
+*.sqlite3
+
+# OS
+Thumbs.db

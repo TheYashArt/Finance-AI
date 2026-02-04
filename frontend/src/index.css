@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #00D09C;
+  --color-primary-dark: #00A87E;
+  --color-dark-bg: #0B0E11;
+  --color-card-bg: #151A1F;
+  --color-card-hover: #1E252B;
+  --color-text-secondary: #9CA3AF;
+  --color-accent-purple: #8B5CF6;
+  --color-accent-blue: #3B82F6;
+
+  --font-sans: "Outfit", sans-serif;
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-card-bg/60 backdrop-blur-lg border border-white/5;
+  }
+
+  .glass-card {
+    @apply bg-card-bg rounded-2xl border border-white/5 p-6;
+    padding-bottom: 6px;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    /* IE & Edge */
+    scrollbar-width: none;
+    /* Firefox */
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari & Edge */
+  }
+}

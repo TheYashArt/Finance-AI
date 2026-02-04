@@ -1,0 +1,2 @@
+improving lip shapes 
+we can change mapping of IPA and visemes to get better results
