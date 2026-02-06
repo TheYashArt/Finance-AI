@@ -185,6 +185,8 @@ function Avatar({ model, handpos, ischatting, text, audioFile, speakTrigger }) {
 
     const headMesh = useRef(null);
     const teethMesh = useRef(null);
+    const eyelidright = useRef(null);
+    const eyelidleft = useRef(null);
 
     // ============================================
     // VISEME LIP SYNC STATE
@@ -198,19 +200,68 @@ function Avatar({ model, handpos, ischatting, text, audioFile, speakTrigger }) {
     const visemePlaybackTime = useRef(0);
     const currentVisemeIndex = useRef(0);
 
+    const eyeLidBone = useRef(null);
+    const blinkTime = useRef(0);
+    const nextBlinkTime = useRef(Math.random() * 3 + 2); // First blink in 2-5 seconds
+
     useEffect(() => {
         scene.traverse((obj) => {
+            if (obj.isMesh) {
+                console.log("Mesh: ", obj.name)
+            }
+            if (obj.isBone) {
+                console.log("Bone: ", obj.name)
+            }
             if (obj.isMesh && obj.morphTargetDictionary) {
 
                 if (obj.name === "Wolf3D_Head") {
                     headMesh.current = obj;
+                    // obj.visible = false;
                 }
                 if (obj.name === "Wolf3D_Teeth") {
                     teethMesh.current = obj;
                 }
             }
+            // Capture the specific bone for eyelids
+            if (obj.isBone && obj.name === "Bone") {
+                eyeLidBone.current = obj;
+            }
         });
     }, [scene]);
+
+    // ============================================
+    // BLINK ANIMATION
+    // ============================================
+    useFrame((state, delta) => {
+        if (!eyeLidBone.current) return;
+
+        blinkTime.current += delta;
+
+        if (blinkTime.current >= nextBlinkTime.current) {
+            // Blink duration is approx 0.15s - 0.2s
+            const blinkDuration = 0.1;
+            const timeSinceBlinkStart = blinkTime.current - nextBlinkTime.current;
+
+            if (timeSinceBlinkStart <= blinkDuration) {
+                // 0 to 1 (closed) back to 0 (open)
+                // Sine wave from 0 to PI covers roughly "open -> closed -> open"
+                // Using sin(T * PI / Duration)
+                const blinkValue = Math.sin((timeSinceBlinkStart / blinkDuration) * Math.PI / 2);
+                // Adjust max rotation. Assuming Rotation roughly around X axis.
+                // Need to test direction. Let's assume negative X is down/closed.
+                // The user had -12 previously, which is huge (approx 4 * PI). 
+                // Usually eyelids are 0 to ~1.0 radians. Let's try -1.5 (approx 90 deg) or similar.
+                // User said "added bone to eyelids", usually a single bone for both or one for each?
+                // "name of the bone is Bone" implies singular.
+                eyeLidBone.current.rotation.x = blinkValue * 0.8; // Testing value, likely need adjustment
+            } else {
+                // Blink finished
+                eyeLidBone.current.rotation.x = 0;
+                blinkTime.current = 0;
+                nextBlinkTime.current = Math.random() * 4 + 2; // Next blink in 2-6s
+            }
+        }
+    });
 
     // ============================================
     // TEXT TO VISEME CONVERSION + AUDIO PLAYBACK
@@ -344,6 +395,8 @@ function Avatar({ model, handpos, ischatting, text, audioFile, speakTrigger }) {
         avtargroup.current.position.y = currentpos + (targetpos - currentpos) * speed * delta
         avtargroup.current.rotation.x = currentrot + (targetrot - currentrot) * speed * delta
     })
+
+
 
 
     // ============================================
@@ -551,6 +604,9 @@ function Avatar({ model, handpos, ischatting, text, audioFile, speakTrigger }) {
         });
 
     }, [scene]);
+
+
+
 
     useFrame((state, delta) => {
         time.current += delta;

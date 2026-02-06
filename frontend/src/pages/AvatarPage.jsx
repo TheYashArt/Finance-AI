@@ -111,7 +111,7 @@ const AvatarPage = () => {
                     <ambientLight intensity={0.6} />
                     <directionalLight position={[2, 2, 5]} intensity={2} />
                     <Avatar
-                        model={ismale ? '/models/SkinMale.glb' : '/models/WhiteFemale.glb'}
+                        model={ismale ? '/models/weightedMale5.glb' : '/models/WhiteFemale.glb'}
                         handpos={ismale ? 1.3 : 1.15}
                         ischatting={ischatting}
                         text={text ? text : ""}
