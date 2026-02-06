@@ -111,7 +111,7 @@ const AvatarPage = () => {
                     <ambientLight intensity={0.6} />
                     <directionalLight position={[2, 2, 5]} intensity={2} />
                     <Avatar
-                        model={ismale ? '/models/weightedMale5.glb' : '/models/WhiteFemale.glb'}
+                        model={ismale ? '/models/Male.glb' : '/models/Female.glb'}
                         handpos={ismale ? 1.3 : 1.15}
                         ischatting={ischatting}
                         text={text ? text : ""}
@@ -150,20 +150,6 @@ const AvatarPage = () => {
                                     }`}
                             >
                                 <Speech size={18} />
-                            </button>
-                            <input
-                                type="file"
-                                ref={fileInputRef}
-                                onChange={handleFileChange}
-                                accept="audio/*"
-                                className="hidden"
-                            />
-                            <button
-                                onClick={() => fileInputRef.current.click()}
-                                className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-emerald-400 hover:bg-emerald-500/20 transition-all"
-                                title="Upload Audio"
-                            >
-                                <Volume2 size={18} />
                             </button>
                         </div>
                         {/* <p className='text-xs text-gray-400 mt-2 text-center'>Speech input (independent from chat)</p> */}

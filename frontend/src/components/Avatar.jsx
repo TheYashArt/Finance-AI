@@ -202,7 +202,7 @@ function Avatar({ model, handpos, ischatting, text, audioFile, speakTrigger }) {
 
     const eyeLidBone = useRef(null);
     const blinkTime = useRef(0);
-    const nextBlinkTime = useRef(Math.random() * 3 + 2); // First blink in 2-5 seconds
+    const nextBlinkTime = useRef(Math.random() * 0 + 2); // First blink in 2-5 seconds
 
     useEffect(() => {
         scene.traverse((obj) => {
@@ -238,8 +238,7 @@ function Avatar({ model, handpos, ischatting, text, audioFile, speakTrigger }) {
         blinkTime.current += delta;
 
         if (blinkTime.current >= nextBlinkTime.current) {
-            // Blink duration is approx 0.15s - 0.2s
-            const blinkDuration = 0.1;
+            const blinkDuration = 0.2;
             const timeSinceBlinkStart = blinkTime.current - nextBlinkTime.current;
 
             if (timeSinceBlinkStart <= blinkDuration) {
