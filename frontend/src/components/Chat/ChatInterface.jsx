@@ -6,7 +6,12 @@ import FloatingNav from '../FloatingNav';
 import { useNavigate } from 'react-router-dom';
 
 const ChatInterface = () => {
-    const { messages = [], isLoading, sendMessage, currentSessionId } = useChatStore();
+    const { messages = [], isLoading, sendMessage, currentSessionId, setSection } = useChatStore();
+
+    useEffect(() => {
+        setSection('rag');
+    }, [setSection]);
+
     const [input, setInput] = useState('');
     const [ischatting, setIschatting] = useState(false)
     const [isAdmin, setIsAdmin] = useState(localStorage.getItem('isAdmin'))

@@ -11,7 +11,11 @@ class AIService:
     def __init__(self):
         self.model = os.getenv("OLLAMA_MODEL", "llama3.1:8b")
 
-    def build_context(self, db: Session) -> str:
+    def build_context(self, db: Session, section: str = "dashboard") -> str:
+        # Only build financial context for Dashboard and Avatar sections
+        if section.lower() not in ["dashboard", "avatar"]:
+            return "You are a helpful AI assistant."
+
         # Fetch recent transactions (last 10)
         transactions = db.query(Transaction).order_by(Transaction.date.desc()).limit(10).all()
         tx_str = "\n".join([f"- {t.date.date()}: {t.description} ({t.amount})" for t in transactions])
@@ -99,13 +103,23 @@ IMPORTANT RULES:
 """
         return context
 
-    def generate_stream(self, prompt: str, db: Session):
-        context = self.build_context(db)
-        full_prompt = f"{context}\n\nUser: {prompt}\nAssistant:"
+    def generate_stream(self, prompt: str, db: Session, section: str = "dashboard", history: list = []):
+        system_context = self.build_context(db, section)
+        
+        # Build messages list
+        messages = [{'role': 'system', 'content': system_context}]
+        
+        # Add history
+        for msg in history:
+            role = 'user' if msg.role == 'user' else 'assistant'
+            messages.append({'role': role, 'content': msg.content})
+            
+        # Add current user prompt
+        messages.append({'role': 'user', 'content': prompt})
         
         stream = ollama.chat(
             model=self.model,
-            messages=[{'role': 'user', 'content': full_prompt}],
+            messages=messages,
             stream=True,
         )
 

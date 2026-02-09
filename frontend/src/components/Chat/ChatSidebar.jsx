@@ -4,17 +4,21 @@ import { useChatStore } from '../../store/useChatStore';
 import MoreOptionsModel from '../MoreOptionsModel';
 import { useNavigate } from 'react-router-dom';
 
-const ChatSidebar = () => {
+const ChatSidebar = ({ section }) => {
     const [openModalSessionId, setOpenModalSessionId] = useState(null);
     const [editingSessionId, setEditingSessionId] = useState(null);
     const [editedTitle, setEditedTitle] = useState('');
-    const { sessions, currentSessionId, fetchSessions, createNewSession, selectSession, deleteSession, updateSessionTitle } = useChatStore();
+    const { sessions, currentSessionId, fetchSessions, createNewSession, selectSession, deleteSession, updateSessionTitle, setSection, activeSection } = useChatStore();
 
     const nav = useNavigate()
 
     useEffect(() => {
-        fetchSessions();
-    }, []);
+        if (section && section !== activeSection) {
+            setSection(section);
+        } else {
+            fetchSessions();
+        }
+    }, [section, setSection, activeSection]);
 
     const handleNewChat = async () => {
         try {
