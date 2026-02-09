@@ -1,2 +1,2 @@
-improving lip shapes 
-we can change mapping of IPA and visemes to get better results
+working on emotions
+need to add happy and sad emotions teak the smile as needed

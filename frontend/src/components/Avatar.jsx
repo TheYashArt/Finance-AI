@@ -4,7 +4,7 @@ import { useGLTF } from "@react-three/drei";
 import { textToVisemes, textToVisemesAPI, audioToVisemesAPI, textToAudioVisemesAPI, getVisemeMorphTargets } from "../utils/visemeUtils";
 import { speakText, stopSpeaking } from "../utils/ttsUtils";
 
-function Avatar({ model, handpos, ischatting, text, audioFile, speakTrigger, onSpeechStart }) {
+function Avatar({ model, handpos, ischatting, text, audioFile, speakTrigger, onSpeechStart, emotions }) {
     const { scene } = useGLTF(model);
     const groupRef = useRef();
     const avtargroup = useRef()
@@ -16,6 +16,15 @@ function Avatar({ model, handpos, ischatting, text, audioFile, speakTrigger, onS
     const spine = useRef(null);
     const meshes = useRef([]);
     const time = useRef(0);
+    const leftindex4 = useRef(null);
+    const leftmiddle4 = useRef(null);
+    const leftring4 = useRef(null);
+    const leftpinky4 = useRef(null);
+
+    const rightindex4 = useRef(null);
+    const rightmiddle4 = useRef(null);
+    const rightring4 = useRef(null);
+    const rightpinky4 = useRef(null);
 
     // List of Bone Points names can be used for animation
     const bones = [
@@ -205,6 +214,73 @@ function Avatar({ model, handpos, ischatting, text, audioFile, speakTrigger, onS
     const blinkTime = useRef(0);
     const nextBlinkTime = useRef(Math.random() * 0 + 2); // First blink in 2-5 seconds
 
+    // Emotion system
+    const leftEye = useRef(null);
+    const rightEye = useRef(null);
+    const thinkingTime = useRef(0);
+    const thinkingPhase = useRef(0); // 0: idle, 1: moving, 2: holding, 3: returning
+
+    // Emotion configurations
+    const emotionConfigs = {
+        happy: {
+            gestureAmplitude: 1.3,
+            gestureSpeed: 1.2,
+            headTilt: 0.05,
+            headNodSpeed: 1.0,
+            smileIntensity: 0.3
+        },
+        sad: {
+            gestureAmplitude: 0.5,
+            gestureSpeed: 0.6,
+            headTilt: -0.15,
+            headNodSpeed: 0.5,
+            smileIntensity: 0
+        },
+        neutral: {
+            gestureAmplitude: 1.0,
+            gestureSpeed: 1.0,
+            headTilt: 0,
+            headNodSpeed: 0.8,
+            smileIntensity: 0
+        },
+        explain1: {
+            gestureAmplitude: 0.7,
+            gestureSpeed: 0.9,
+            headTilt: 0,
+            headNodSpeed: 0.8,
+            smileIntensity: 0,
+            armFoldAngle: Math.PI / 4 // 45 degrees
+        },
+        explain2: {
+            gestureAmplitude: 1.5,
+            gestureSpeed: 1.3,
+            headTilt: 0,
+            headNodSpeed: 1.0,
+            smileIntensity: 0,
+            armFoldAngle: Math.PI / 2, // 90 degrees
+            customHandPath: true // Enable custom path animation
+        },
+        listen: {
+            gestureAmplitude: 0.3,
+            gestureSpeed: 0.5,
+            headTilt: 0,
+            headNodSpeed: 2.0, // Faster nodding
+            nodAmplitude: 0.08, // Larger nods
+            smileIntensity: 0
+        },
+        think: {
+            gestureAmplitude: 0.4,
+            gestureSpeed: 0.6,
+            headTilt: 0.1,
+            headNodSpeed: 0.3,
+            smileIntensity: 0,
+            eyeRoll: true
+        }
+    };
+
+    const currentEmotion = emotionConfigs[emotions?.toLowerCase()] || emotionConfigs.neutral;
+
+
     useEffect(() => {
         scene.traverse((obj) => {
             if (obj.isMesh) {
@@ -224,9 +300,49 @@ function Avatar({ model, handpos, ischatting, text, audioFile, speakTrigger, onS
                 }
             }
             // Capture the specific bone for eyelids
-            if (obj.isBone && obj.name === "Bone") {
+            if (obj.isBone && obj.name === "EyeLids") {
                 eyeLidBone.current = obj;
+                console.log("✅ Found EyeLids bone for blinking animation");
             }
+            // Capture eye bones for thinking animation (prioritize bones over meshes)
+            if (obj.isBone && obj.name === "LeftEye") {
+                leftEye.current = obj;
+                console.log("✅ Found LeftEye bone for eye roll");
+            }
+            if (obj.isBone && obj.name === "RightEye") {
+                rightEye.current = obj;
+                console.log("✅ Found RightEye bone for eye roll");
+            }
+            if (obj.isBone && obj.name === "RightHandIndex4") {
+                rightindex4.current = obj;
+            }
+            if (obj.isBone && obj.name === "RightHandMiddle4") {
+                rightmiddle4.current = obj;
+            }
+            if (obj.isBone && obj.name === "RightHandRing4") {
+                rightring4.current = obj;
+            }
+            if (obj.isBone && obj.name === "RightHandPinky4") {
+                rightpinky4.current = obj;
+            }
+            if (obj.isBone && obj.name === "LeftHandIndex4") {
+                leftindex4.current = obj;
+            }
+            if (obj.isBone && obj.name === "LeftHandMiddle4") {
+                leftmiddle4.current = obj;
+            }
+            if (obj.isBone && obj.name === "LeftHandRing4") {
+                leftring4.current = obj;
+            }
+            if (obj.isBone && obj.name === "LeftHandPinky4") {
+                leftpinky4.current = obj;
+            }
+        });
+
+        // Verify what we captured after traversal
+        console.log("Eye capture verification:", {
+            leftEye: leftEye.current ? leftEye.current.name : "NOT FOUND",
+            rightEye: rightEye.current ? rightEye.current.name : "NOT FOUND"
         });
     }, [scene]);
 
@@ -239,26 +355,23 @@ function Avatar({ model, handpos, ischatting, text, audioFile, speakTrigger, onS
         blinkTime.current += delta;
 
         if (blinkTime.current >= nextBlinkTime.current) {
-            const blinkDuration = 0.2;
+            const blinkDuration = 0.2; // Faster blink
             const timeSinceBlinkStart = blinkTime.current - nextBlinkTime.current;
 
             if (timeSinceBlinkStart <= blinkDuration) {
-                // 0 to 1 (closed) back to 0 (open)
-                // Sine wave from 0 to PI covers roughly "open -> closed -> open"
-                // Using sin(T * PI / Duration)
-                const blinkValue = Math.sin((timeSinceBlinkStart / blinkDuration) * Math.PI / 2);
-                // Adjust max rotation. Assuming Rotation roughly around X axis.
-                // Need to test direction. Let's assume negative X is down/closed.
-                // The user had -12 previously, which is huge (approx 4 * PI). 
-                // Usually eyelids are 0 to ~1.0 radians. Let's try -1.5 (approx 90 deg) or similar.
-                // User said "added bone to eyelids", usually a single bone for both or one for each?
-                // "name of the bone is Bone" implies singular.
-                eyeLidBone.current.rotation.x = blinkValue * 0.8; // Testing value, likely need adjustment
+                // Smooth blink animation using sine wave
+                const blinkProgress = timeSinceBlinkStart / blinkDuration;
+                const blinkValue = Math.sin(blinkProgress * Math.PI);
+
+                // Move eyelids forward on Z-axis to close over eyes
+                // eyeLidBone.current.position.y = 1
+                eyeLidBone.current.rotation.x = blinkValue * 2;
+                eyeLidBone.current.position.z = blinkValue * 0.12; // Move forward
             } else {
-                // Blink finished
-                eyeLidBone.current.rotation.x = 0;
+                // Blink finished - reset to original position
+                eyeLidBone.current.position.z = 0;
                 blinkTime.current = 0;
-                nextBlinkTime.current = Math.random() * 2 + 2; // Next blink in 2-6s
+                nextBlinkTime.current = Math.random() * 3 + 2; // Next blink in 2-5s
             }
         }
     });
@@ -629,85 +742,113 @@ function Avatar({ model, handpos, ischatting, text, audioFile, speakTrigger, onS
         time.current += delta;
 
         // ========================================
-        // RIGHT ARM ANIMATION
+        //Happy animation 
+        if (currentEmotion.name === "happy") {
+            
+        }
+
+
+
         // ========================================
-        // Right arm - primary gesturing (larger movements)
+        // RIGHT ARM ANIMATION (Emotion-aware)
+        // ========================================
         if (rightArm.current) {
-            // gesture1: Controls side-to-side movement (Z-axis rotation)
-            // - Math.sin(time * speed) creates oscillation
-            // - Speed 1.2 = how fast the gesture repeats
-            // - Amplitude 0.05 = how far the arm moves side to side
-            const gesture1 = Math.sin(time.current * 1.2) * 0.05;
+            const gesture1 = Math.sin(time.current * 1.2 * currentEmotion.gestureSpeed) * 0.05 * currentEmotion.gestureAmplitude;
+            const gesture2 = Math.sin(time.current * 2 + 1) * 0.01 * currentEmotion.gestureAmplitude;
 
-            // gesture2: Controls forward/backward movement (X-axis rotation)
-            // - Speed 2 = faster oscillation for natural variation
-            // - Amplitude 0.1 = subtle forward/back motion
-            const gesture2 = Math.sin(time.current * 2 + 1) * 0.01;
-
-            // Apply rotations:
-            // rotation.z: Side-to-side (0.3 = base position, gesture1 = animation)
             rightArm.current.rotation.z = gesture1;
-            // rotation.x: Up/down angle (1.3 = arm pointing down, gesture2 = subtle movement)
             rightArm.current.rotation.x = handpos + gesture2;
+
         }
 
-        // Right forearm - adds emphasis to gestures
+        // Right forearm
         if (rightForeArm.current) {
-            // emphasis: Bends the forearm for more expressive gestures
-            // - Speed 1.5 = slightly faster than upper arm
-            // - Amplitude 0.2 = moderate bend amount
-            const emphasis = Math.sin(time.current * 0.5 + 0.5) * 0.06;
-            rightForeArm.current.rotation.z = emphasis;
-            rightForeArm.current.rotation.x = 0.1 + emphasis;
-        }
+            const emphasis = Math.sin(time.current * 0.5 + 0.5) * 0.06 * currentEmotion.gestureAmplitude;
+            const emphasis8 = Math.sin((time.current * 0.5 + 0.5) * 0.5) * 0.06 * currentEmotion.gestureAmplitude;
+            const baseFold = -currentEmotion.armFoldAngle || 0; // Add fold angle if defined
 
+            rightForeArm.current.rotation.z = emphasis + baseFold;
+            rightForeArm.current.rotation.y = emphasis8;
+            rightForeArm.current.rotation.x = 0.1 + emphasis + emphasis8;
+        }
         // ========================================
-        // LEFT ARM ANIMATION
+        // LEFT ARM ANIMATION (Emotion-aware)
         // ========================================
-        // Left arm - secondary gesturing (offset timing for natural look)
         if (leftArm.current) {
-            // gesture3: Left arm side-to-side movement
-            // - Speed 1.1 = slightly different from right arm (more natural)
-            // - Phase shift +2 = starts at different point in cycle
-            const gesture3 = Math.sin(time.current * 1.1 + 2) * 0.05;
-
-            // gesture4: Left arm forward/backward movement
-            // - Speed 0.9 = slower than right arm for variation
-            const gesture4 = Math.sin(time.current * 0.9 + 3) * 0.01;
-
-            // Apply rotations (negative Z for opposite direction):
-            leftArm.current.rotation.z = 0 + gesture3; // Negative base = arms symmetric
-            leftArm.current.rotation.x = handpos + gesture4; // Same down angle as right
+            const gesture3 = Math.sin(time.current * 1.1 * currentEmotion.gestureSpeed + 2) * 0.05 * currentEmotion.gestureAmplitude;
+            const gesture4 = Math.sin(time.current * 0.9 + 3) * 0.01 * currentEmotion.gestureAmplitude;
+            leftArm.current.rotation.z = 0 + gesture3;
+            leftArm.current.rotation.x = handpos + gesture4;
         }
 
-        // Left forearm - complementary movement
+        // Left forearm
         if (leftForeArm.current) {
-            // complement: Forearm bend with different timing
-            // - Speed 1.4 = unique rhythm
-            // - Phase shift +1.5 = offset from right forearm
-            const complement = Math.sin(time.current * 0.8 + 1.5) * 0.08
-                ;
-            leftForeArm.current.rotation.z = 0 + complement; // Negative for symmetry
+            const complement = Math.sin(time.current * 0.8 + 1.5) * 0.08 * currentEmotion.gestureAmplitude;
+            const complement8 = Math.sin((time.current * 0.8 + 1.5) * 2) * 0.15 * currentEmotion.gestureAmplitude;
+            const baseFold = -currentEmotion.armFoldAngle || 0; // Add fold angle if defined
+            leftForeArm.current.rotation.z = 0 + complement - baseFold; // Negative for left arm symmetry
+            leftForeArm.current.rotation.y = -complement8
             leftForeArm.current.rotation.x = 0.1 + complement;
+
         }
 
         // ========================================
-        // HEAD ANIMATION
+        // HEAD ANIMATION (Emotion-aware)
         // ========================================
-        // Head - subtle nodding and tilting for engagement
         if (head.current) {
-            // nod: Up/down head movement (like saying "yes")
-            // - Speed 0.8 = slow, thoughtful nodding
-            // - Amplitude 0.02 = subtle movement
-            const nod = Math.sin(time.current * 0.8 + 2) * 0.02;
-
-            // tilt: Side-to-side head tilt (adds personality)
-            // - Speed 0.5 = very slow, gentle tilt
-            // - Amplitude 0.02 = very subtle
+            const nodAmplitude = currentEmotion.nodAmplitude || 0.02;
+            const nod = Math.sin(time.current * 0.8 * currentEmotion.headNodSpeed + 2) * nodAmplitude;
             const tilt = Math.sin(time.current * 0.5) * 0.02;
 
-            head.current.rotation.x = -0.2 + nod;  // X-axis = nod up/down
-            head.current.rotation.z = tilt; // Z-axis = tilt left/right
+            head.current.rotation.x = -0.2 + currentEmotion.headTilt + nod;
+            head.current.rotation.z = tilt;
+        }
+
+        // ========================================
+        // THINKING ANIMATION (Eye Roll)
+        // ========================================
+        if (currentEmotion.eyeRoll && leftEye.current && rightEye.current) {
+            thinkingTime.current += delta;
+
+            if (thinkingPhase.current === 0 && thinkingTime.current > 1.0) {
+                thinkingPhase.current = 1; // Start moving
+                thinkingTime.current = 0;
+                console.log("👁️ Starting eye roll animation");
+            } else if (thinkingPhase.current === 1) {
+                // Move eyes to the right
+                const progress = Math.min(thinkingTime.current / 0.5, 1);
+                const angle = progress * 0.2; // Increased angle for more visible movement
+                leftEye.current.rotation.y = angle;
+                rightEye.current.rotation.y = angle;
+                head.current.rotation.y = angle;
+                if (progress >= 1) {
+                    thinkingPhase.current = 2;
+                    thinkingTime.current = 0;
+                    console.log("👁️ Eyes moved to side, holding...");
+                }
+            } else if (thinkingPhase.current === 2 && thinkingTime.current > 1.5) {
+                thinkingPhase.current = 3; // Start returning
+                thinkingTime.current = 0;
+                console.log("👁️ Returning eyes to center");
+            } else if (thinkingPhase.current === 3) {
+                // Return eyes to center
+                const progress = Math.min(thinkingTime.current / 0.5, 1);
+                const angle = 0.2 * (1 - progress);
+                leftEye.current.rotation.y = angle;
+                rightEye.current.rotation.y = angle;
+                head.current.rotation.y = angle;
+                if (progress >= 1) {
+                    thinkingPhase.current = 0;
+                    thinkingTime.current = 0;
+                    console.log("👁️ Eyes returned to center");
+                }
+            }
+        } else if (leftEye.current && rightEye.current) {
+            // Reset eyes for other emotions
+            leftEye.current.rotation.y = 0;
+            rightEye.current.rotation.y = 0;
+            thinkingPhase.current = 0;
+            thinkingTime.current = 0;
         }
 
         // Update all skinned meshes

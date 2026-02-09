@@ -13,6 +13,7 @@ const Typewriter = ({ text, onComplete }) => {
     const [displayText, setDisplayText] = useState('');
     const [currentIndex, setCurrentIndex] = useState(0);
 
+
     useEffect(() => {
         if (!text) return;
 
@@ -35,6 +36,8 @@ const AvatarPage = () => {
     const [input, setInput] = useState('');
     const [speechText, setSpeechText] = useState(''); // Separate state for speech/lip sync
     const [ischatting, setIschatting] = useState(false)
+    const emotions = ["happy", "sad", "explain1", "explain2", "listen", "Think", "natural"]
+    const [currentEmotion, setCurrentEmotion] = useState("natural")
 
     useEffect(() => {
         setSection('avatar');
@@ -154,22 +157,32 @@ const AvatarPage = () => {
                     <ambientLight intensity={0.6} />
                     <directionalLight position={[2, 2, 5]} intensity={2} />
                     <Avatar
-                        model={ismale ? '/models/Male.glb' : '/models/Female.glb'}
+                        model={ismale ? '/models/Male6.glb' : '/models/Female.glb'}
                         handpos={ismale ? 1.3 : 1.15}
                         ischatting={ischatting}
                         text={text ? text : ""}
                         audioFile={audioFile}
                         speakTrigger={speakTrigger}
                         onSpeechStart={handleSpeechStart}
+                        emotions={currentEmotion}
                     />
                     {/* Use this to rotate the model using mouse pointer */}
-                    {/* <OrbitControls /> */}
+                    <OrbitControls />
                 </Canvas>
 
                 {/* Speech Input Section - Independent from Chat */}
                 <div className='absolute flex flex-col items-center w-full gap-3 z-10 bottom-20 px-4'>
                     <div className='w-full max-w-md bg-black/40 backdrop-blur-xl border border-emerald-500/30 rounded-2xl p-3 shadow-xl'>
                         <div className='flex items-center gap-2'>
+                            <select
+                                value={currentEmotion}
+                                onChange={(e) => setCurrentEmotion(e.target.value)}
+                                className="bg-black/50 text-white border border-emerald-500/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500"
+                            >
+                                {emotions.map((name) => (
+                                    <option key={name} value={name}>{name}</option>
+                                ))}
+                            </select>
                             <input
                                 type="text"
                                 value={speechText}
