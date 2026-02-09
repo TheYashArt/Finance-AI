@@ -4,7 +4,7 @@ import { useGLTF } from "@react-three/drei";
 import { textToVisemes, textToVisemesAPI, audioToVisemesAPI, textToAudioVisemesAPI, getVisemeMorphTargets } from "../utils/visemeUtils";
 import { speakText, stopSpeaking } from "../utils/ttsUtils";
 
-function Avatar({ model, handpos, ischatting, text, audioFile, speakTrigger }) {
+function Avatar({ model, handpos, ischatting, text, audioFile, speakTrigger, onSpeechStart }) {
     const { scene } = useGLTF(model);
     const groupRef = useRef();
     const avtargroup = useRef()
@@ -199,6 +199,7 @@ function Avatar({ model, handpos, ischatting, text, audioFile, speakTrigger }) {
     const [isPlayingVisemes, setIsPlayingVisemes] = useState(false);
     const visemePlaybackTime = useRef(0);
     const currentVisemeIndex = useRef(0);
+    const durationRatio = useRef(1); // Ratio to scale viseme timing to audio duration
 
     const eyeLidBone = useRef(null);
     const blinkTime = useRef(0);
@@ -257,7 +258,7 @@ function Avatar({ model, handpos, ischatting, text, audioFile, speakTrigger }) {
                 // Blink finished
                 eyeLidBone.current.rotation.x = 0;
                 blinkTime.current = 0;
-                nextBlinkTime.current = Math.random() * 4 + 2; // Next blink in 2-6s
+                nextBlinkTime.current = Math.random() * 2 + 2; // Next blink in 2-6s
             }
         }
     });
@@ -299,6 +300,7 @@ function Avatar({ model, handpos, ischatting, text, audioFile, speakTrigger }) {
                     audio.onplay = () => {
                         setIsPlayingVisemes(true); // START VISUALS NOW
                         visemePlaybackTime.current = 0;
+                        if (onSpeechStart) onSpeechStart(); // Trigger callback
                     };
 
                     audio.onended = () => {
@@ -326,9 +328,24 @@ function Avatar({ model, handpos, ischatting, text, audioFile, speakTrigger }) {
                     const audio = new Audio(`${audio_url}?t=${new Date().getTime()}`);
                     window.currentAudio = audio; // Track current audio
 
+                    audio.onloadedmetadata = () => {
+                        console.log("Audio Loaded. Duration:", audio.duration);
+                        if (visemes.length > 0 && audio.duration && audio.duration !== Infinity) {
+                            const lastViseme = visemes[visemes.length - 1];
+                            const visemeDuration = lastViseme.start + lastViseme.duration;
+
+                            // Calculate scaling ratio
+                            durationRatio.current = visemeDuration / audio.duration;
+                            console.log(`⏱️ Syncing: Audio ${audio.duration.toFixed(2)}s vs Visemes ${visemeDuration.toFixed(2)}s (Ratio: ${durationRatio.current.toFixed(2)})`);
+                        } else {
+                            durationRatio.current = 1;
+                        }
+                    };
+
                     audio.onplay = () => {
                         setIsPlayingVisemes(true); // START VISUALS NOW
                         visemePlaybackTime.current = 0;
+                        if (onSpeechStart) onSpeechStart(); // Trigger callback
                     };
 
                     audio.onended = () => {
@@ -425,10 +442,11 @@ function Avatar({ model, handpos, ischatting, text, audioFile, speakTrigger }) {
             // Use precise audio time if available, otherwise fallback to delta accumulation
             if (window.currentAudio && !window.currentAudio.paused) {
                 // We subtract a small offset because audio hardware has latency.
-                // If lips are "ahead", it means we are seeing the visual at T=0.2 but 
-                // the sound for T=0.2 hasn't come out of the speaker yet.
-                // So we use a slightly "past" time for the visual to match the delayed sound.
-                visemePlaybackTime.current = Math.max(0, window.currentAudio.currentTime - AUDIO_LATENCY);
+                // Scale the audio time to match the viseme timeline
+                // If audio is shorter than visemes, ratio > 1 (slow down visemes)
+                // If audio is longer than visemes, ratio < 1 (speed up visemes)
+                const scaledTime = (window.currentAudio.currentTime - AUDIO_LATENCY) * durationRatio.current;
+                visemePlaybackTime.current = Math.max(0, scaledTime);
             } else {
                 visemePlaybackTime.current += delta;
             }
@@ -495,13 +513,13 @@ function Avatar({ model, handpos, ischatting, text, audioFile, speakTrigger }) {
 
             // MOUTH OPEN - Controls how wide the mouth opens vertically
             if (hDict.mouthOpen !== undefined) {
-                const targetValue = morphTargets.mouthOpen * 2.4; // Intensified by 40% (2.2 -> 3.0)
+                const targetValue = morphTargets.mouthOpen * 2; // Intensified by 40% (2.2 -> 3.0)
                 const newValue = lerp(hInfl[hDict.mouthOpen], targetValue, blendSpeed);
                 hInfl[hDict.mouthOpen] = newValue;
 
                 // Apply same value to teeth mesh if it exists
                 if (tDict.mouthOpen !== undefined) {
-                    tInfl[tDict.mouthOpen] = newValue;
+                    tInfl[tDict.mouthOpen] = newValue + 1;
                 }
             }
 

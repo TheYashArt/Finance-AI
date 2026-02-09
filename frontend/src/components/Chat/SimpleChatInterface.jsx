@@ -1,9 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Loader2, Bot, User, ExternalLink } from 'lucide-react';
+import { Send, Loader2, Bot, User, History, X } from 'lucide-react';
 import { useChatStore } from '../../store/useChatStore';
+import ChatSidebar from './ChatSidebar'
 
 const SimpleChatInterface = () => {
-    const { messages = [], isLoading, sendMessage } = useChatStore();
+
+    const [ismodel, setIsmodel] = useState(false)
+    const { messages = [], isLoading, sendMessage, setSection } = useChatStore();
+
+    useEffect(() => {
+        setSection('dashboard');
+    }, [setSection]);
+
     const [input, setInput] = useState('');
     const messagesEndRef = useRef(null);
 
@@ -22,12 +30,31 @@ const SimpleChatInterface = () => {
         setInput('');
     };
 
-    const handleOpenFullChat = () => {
-        window.location.href = '/chat';
-    };
+    const handleModelOpen = () => {
+        setIsmodel(true)
+    }
+
+    const handleModelClose = () => {
+        setIsmodel(false);
+    }
 
     return (
-        <div className="h-full flex flex-col border border-white/10 rounded-4xl">
+        <div className="h-full flex flex-col border relative border-white/10 rounded-4xl overflow-hidden">
+            <div className='absolute top-1 pr-6 w-full z-20 p-2 flex justify-end border border-x-0 border-t-0 border-b-white/10 transition-all' >
+                <History size={22} onClick={handleModelOpen} className=" cursor-pointer text-emerald-400 hover:-rotate-360 duration-800 transition-all" />
+            </div>
+
+            {/* Sidebar Modal Overlay */}
+            {ismodel && (
+                <div className="absolute right-0 inset-0 z-30 bg-black/80 backdrop-blur-md flex flex-col animate-in slide-in-from-right duration-300">
+                    <div className="absolute top-4 right-[calc(100%-69%)] z-40 cursor-pointer p-2 bg-white/10 rounded-full hover:bg-white/20 transition-all" onClick={handleModelClose}>
+                        <X size={20} className="text-white hover:rotate-180 duration-800 transition-all" />
+                    </div>
+                    <div className='w-[calc(100%-70%)] h-full right-0 absolute'>
+                        <ChatSidebar section="dashboard" />
+                    </div>
+                </div>
+            )}
             {/* Messages Area */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-hide">
                 {messages.length === 0 ? (
@@ -43,9 +70,9 @@ const SimpleChatInterface = () => {
                         </div>
                     </div>
                 ) : (
-                    <>
+                    <div className="pt-8" >
                         {messages.map((msg, idx) => (
-                            <div key={idx} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                            <div key={idx} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'} mb-2`}>
                                 {msg.role === 'assistant' && (
                                     <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0 mt-1">
                                         <Bot size={16} className="text-emerald-400" />
@@ -82,7 +109,7 @@ const SimpleChatInterface = () => {
                             </div>
                         )}
                         <div ref={messagesEndRef} />
-                    </>
+                    </div>
                 )}
             </div>
 
@@ -112,14 +139,6 @@ const SimpleChatInterface = () => {
                             {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
                         </button>
 
-                        <button
-                            type="button"
-                            alt="Open full chat"
-                            onClick={handleOpenFullChat}
-                            className="p-2.5 rounded-lg transition-all duration-300 flex items-center justify-center bg-white/5 text-gray-600 cursor-pointer border border-white/10 hover:text-emerald-400 hover:border-emerald-500/30"
-                        >
-                            <ExternalLink size={18} />
-                        </button>
                     </div>
                 </form>
             </div>

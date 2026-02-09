@@ -7,12 +7,38 @@ import { Canvas } from '@react-three/fiber'
 // import ChatInterface from '../components/Chat/ChatInterface';
 import Avatar from '../components/Avatar';
 import { OrbitControls } from '@react-three/drei';
+import VenomBlob from '../components/VenomBlob';
+
+const Typewriter = ({ text, onComplete }) => {
+    const [displayText, setDisplayText] = useState('');
+    const [currentIndex, setCurrentIndex] = useState(0);
+
+    useEffect(() => {
+        if (!text) return;
+
+        if (currentIndex < text.length) {
+            const timeout = setTimeout(() => {
+                setDisplayText(prev => prev + text[currentIndex]);
+                setCurrentIndex(prev => prev + 1);
+            }, 30); // Adjust speed here
+            return () => clearTimeout(timeout);
+        } else {
+            if (onComplete) onComplete();
+        }
+    }, [currentIndex, text, onComplete]);
+
+    return <p className="whitespace-pre-wrap leading-relaxed text-[15px]">{displayText}</p>;
+};
 
 const AvatarPage = () => {
-    const { messages = [], isLoading, sendMessage, currentSessionId } = useChatStore();
+    const { messages = [], isLoading, sendMessage, currentSessionId, setSection } = useChatStore();
     const [input, setInput] = useState('');
     const [speechText, setSpeechText] = useState(''); // Separate state for speech/lip sync
     const [ischatting, setIschatting] = useState(false)
+
+    useEffect(() => {
+        setSection('avatar');
+    }, [setSection]);
     const messagesEndRef = useRef(null);
     const [ismale, setIsmale] = useState(true)
     const [issoundon, setIssoundon] = useState(true)
@@ -21,6 +47,7 @@ const AvatarPage = () => {
     const [text, setText] = useState("")
     const [callavatar, setCallavatar] = useState(false)
     const [speakTrigger, setSpeakTrigger] = useState(0)
+    const [showLatestMessage, setShowLatestMessage] = useState(false); // Controls visibility of last msg
     const nav = useNavigate()
 
     const scrollToBottom = () => {
@@ -41,8 +68,32 @@ const AvatarPage = () => {
     }, [messages]);
 
     // Debug: Monitor isLoading state
+    // Auto-speak when AI finishes responding
+    const prevIsLoading = useRef(isLoading);
+
     useEffect(() => {
-    }, [isLoading]);
+        // Check if loading just finished (went from true to false)
+        if (prevIsLoading.current && !isLoading) {
+            // Get the last message
+            if (messages.length > 0) {
+                const lastMsg = messages[messages.length - 1];
+                // Only speak if it's the assistant's message and we haven't spoken it yet
+                if (lastMsg.role === 'assistant') {
+                    const cleanText = lastMsg.content.replace(/```json[\s\S]*?```/g, '').trim();
+                    if (cleanText) {
+                        setText(cleanText);
+                        setShowLatestMessage(false); // Hide message initially
+                        setSpeakTrigger(prev => prev + 1);
+                    }
+                }
+            }
+        }
+        prevIsLoading.current = isLoading;
+    }, [isLoading, messages]);
+
+    const handleSpeechStart = () => {
+        setShowLatestMessage(true); // Show message when speech starts
+    };
 
     const [audioFile, setAudioFile] = useState(null); // State for uploaded audio
     const fileInputRef = useRef(null);
@@ -63,14 +114,6 @@ const AvatarPage = () => {
         // Trigger viseme playback by incrementing counter
         setSpeakTrigger(prev => prev + 1)
     }
-
-    const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setAudioFile(file);
-            setSpeechText(`🎤 Audio: ${file.name}`);
-        }
-    };
 
     return (
         <div className="min-h-screen bg-[#030303] flex gap-2 relative overflow-hidden">
@@ -117,6 +160,7 @@ const AvatarPage = () => {
                         text={text ? text : ""}
                         audioFile={audioFile}
                         speakTrigger={speakTrigger}
+                        onSpeechStart={handleSpeechStart}
                     />
                     {/* Use this to rotate the model using mouse pointer */}
                     {/* <OrbitControls /> */}
@@ -175,10 +219,7 @@ const AvatarPage = () => {
                         <MessageSquare size={20} />
                     </div>
                 </div>
-
             </div>
-
-
             {/* Chat Component*/}
             <div className="flex-1 flex items-center justify-end pt-[calc(100vh-88vh)] relative">
                 <div className="w-[800px] h-[calc(100vh-6.1rem)] bg-black/20 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl flex flex-col relative overflow-hidden">
@@ -188,13 +229,9 @@ const AvatarPage = () => {
                     {!ischatting ? (
                         /* Initial State - Centered Input */
                         <div className="flex-1 flex flex-col items-center justify-center p-8 relative z-10">
-                            {/* Animated Green Orb */}
-                            <div className="relative mb-2">
-                                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-400 to-green-600 animate-pulse shadow-[0_0_60px_rgba(16,185,129,0.4)]"></div>
-                                <div className="absolute inset-0 w-24 h-24 rounded-full border-4 border-emerald-400/30 animate-spin" style={{ animationDuration: '3s' }}></div>
-                                <div className="absolute inset-3 w-18 h-18 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
-                                    <Sparkles className="text-emerald-400" size={32} />
-                                </div>
+                            {/* Animated Venom Blob */}
+                            <div className="relative w-30 h-30">
+                                <VenomBlob className="w-full h-full" />
                             </div>
 
                             <h2 className="text-3xl font-bold mb-3 text-white">
@@ -261,9 +298,21 @@ const AvatarPage = () => {
                                             ? 'bg-emerald-500/10 text-white border border-emerald-500/20 backdrop-blur-md'
                                             : 'bg-white/5 text-gray-200 border border-white/10 backdrop-blur-md'
                                             }`}>
-                                            <p className="whitespace-pre-wrap leading-relaxed text-[15px]">
-                                                {msg.content.replace(/```json[\s\S]*?```/g, '').trim()}
-                                            </p>
+                                            {msg.role === 'assistant' && idx === messages.length - 1 ? (
+                                                showLatestMessage ? (
+                                                    <Typewriter text={msg.content.replace(/```json[\s\S]*?```/g, '').trim()} />
+                                                ) : (
+                                                    <div className="flex items-center gap-1 h-6">
+                                                        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                                                        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                                                        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></span>
+                                                    </div>
+                                                )
+                                            ) : (
+                                                <p className="whitespace-pre-wrap leading-relaxed text-[15px]">
+                                                    {msg.content.replace(/```json[\s\S]*?```/g, '').trim()}
+                                                </p>
+                                            )}
                                         </div>
 
                                         {msg.role === 'user' && (

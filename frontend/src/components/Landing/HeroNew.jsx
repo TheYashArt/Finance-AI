@@ -2,8 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Sparkles, Shield, Globe, Brain, Play, MessageSquare, Mic } from 'lucide-react';
 import TypingText from './TypingEffect';
-import talkingWomen from '../../assets/talkingWomen.mp4';
-import talkingMan from '../../assets/talkinMan.mp4';
 import video from '../../assets/video.mp4'
 
 const HeroNew = () => {

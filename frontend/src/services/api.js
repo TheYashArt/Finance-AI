@@ -109,9 +109,9 @@ export const deleteRecurringExpense = async (recurringId) => {
 };
 
 // Chat Sessions
-export const getChatSessions = async () => {
+export const getChatSessions = async (section = 'rag') => {
     try {
-        const response = await api.get('/ai/sessions');
+        const response = await api.get(`/ai/sessions?section=${section}`);
         return response.data;
     } catch (error) {
         console.error("Error fetching chat sessions:", error);
@@ -119,23 +119,23 @@ export const getChatSessions = async () => {
     }
 };
 
-export const createChatSession = async (title) => {
-    const response = await api.post('/ai/sessions', { title });
+export const createChatSession = async (title, section = 'rag') => {
+    const response = await api.post(`/ai/sessions?section=${section}`, { title });
     return response.data;
 };
 
-export const updateChatSession = async (sessionId, title) => {
-    const response = await api.patch(`/ai/sessions/${sessionId}`, { title });
+export const updateChatSession = async (sessionId, title, section = 'rag') => {
+    const response = await api.patch(`/ai/sessions/${sessionId}?section=${section}`, { title });
     return response.data;
 };
 
-export const deleteChatSession = async (sessionId) => {
-    await api.delete(`/ai/sessions/${sessionId}`);
+export const deleteChatSession = async (sessionId, section = 'rag') => {
+    await api.delete(`/ai/sessions/${sessionId}?section=${section}`);
 };
 
-export const getChatMessages = async (sessionId) => {
+export const getChatMessages = async (sessionId, section = 'rag') => {
     try {
-        const response = await api.get(`/ai/sessions/${sessionId}/messages`);
+        const response = await api.get(`/ai/sessions/${sessionId}/messages?section=${section}`);
         return response.data;
     } catch (error) {
         console.error("Error fetching chat messages:", error);

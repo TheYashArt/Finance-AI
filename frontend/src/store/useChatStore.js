@@ -19,11 +19,18 @@ export const useChatStore = create((set, get) => ({
     messages: [],
     isLoading: false,
     error: null,
+    activeSection: 'rag', // 'rag', 'avatar', 'dashboard'
+
+    setSection: (section) => {
+        set({ activeSection: section, currentSessionId: null, messages: [], sessions: [] });
+        get().fetchSessions();
+    },
 
     // --- Session Management ---
     fetchSessions: async () => {
         try {
-            const sessions = await getChatSessions();
+            const { activeSection } = get();
+            const sessions = await getChatSessions(activeSection);
             set({ sessions });
         } catch (error) {
             console.error("Failed to fetch sessions", error);
@@ -32,7 +39,8 @@ export const useChatStore = create((set, get) => ({
 
     createNewSession: async () => {
         try {
-            const session = await createChatSession("New Chat");
+            const { activeSection } = get();
+            const session = await createChatSession("New Chat", activeSection);
             set(state => ({
                 sessions: [session, ...state.sessions],
                 currentSessionId: session.id,
@@ -47,7 +55,8 @@ export const useChatStore = create((set, get) => ({
     selectSession: async (sessionId) => {
         set({ currentSessionId: sessionId, isLoading: true });
         try {
-            const messages = await getChatMessages(sessionId);
+            const { activeSection } = get();
+            const messages = await getChatMessages(sessionId, activeSection);
             set({ messages, isLoading: false });
         } catch (error) {
             console.error("Failed to fetch messages", error);
@@ -57,7 +66,8 @@ export const useChatStore = create((set, get) => ({
 
     updateSessionTitle: async (sessionId, newTitle) => {
         try {
-            const updated = await updateChatSession(sessionId, newTitle);
+            const { activeSection } = get();
+            const updated = await updateChatSession(sessionId, newTitle, activeSection);
             set(state => ({
                 sessions: state.sessions.map(s => s.id === sessionId ? updated : s)
             }));
@@ -68,7 +78,8 @@ export const useChatStore = create((set, get) => ({
 
     renameSession: async (sessionId, newTitle) => {
         try {
-            const updated = await updateChatSession(sessionId, newTitle);
+            const { activeSection } = get();
+            const updated = await updateChatSession(sessionId, newTitle, activeSection);
             set(state => ({
                 sessions: state.sessions.map(s => s.id === sessionId ? updated : s)
             }));
@@ -79,7 +90,8 @@ export const useChatStore = create((set, get) => ({
 
     deleteSession: async (sessionId) => {
         try {
-            await deleteChatSession(sessionId);
+            const { activeSection } = get();
+            await deleteChatSession(sessionId, activeSection);
             set(state => ({
                 sessions: state.sessions.filter(s => s.id !== sessionId),
                 currentSessionId: state.currentSessionId === sessionId ? null : state.currentSessionId,
@@ -116,9 +128,10 @@ export const useChatStore = create((set, get) => ({
 
         try {
             const token = import.meta.env.VITE_API_TOKEN;
-            console.log('Sending request to:', `${API_URL}/ai/chat/${sessionId}`);
+            const { activeSection } = get();
+            console.log('Sending request to:', `${API_URL}/ai/chat/${sessionId}?section=${activeSection}`);
 
-            const fetchPromise = fetch(`${API_URL}/ai/chat/${sessionId}`, {
+            const fetchPromise = fetch(`${API_URL}/ai/chat/${sessionId}?section=${activeSection}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -195,8 +208,8 @@ export const useChatStore = create((set, get) => ({
             }
 
             // Check for actions after stream is complete
-            // Improved Regex to handle variations
-            const actionMatch = assistantMessage.match(/```json\s*([\s\S]*?)\s*```/);
+            // Improved Regex to handle variations (make 'json' optional)
+            const actionMatch = assistantMessage.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
             if (actionMatch) {
                 try {
                     const actionData = JSON.parse(actionMatch[1]);
@@ -208,15 +221,19 @@ export const useChatStore = create((set, get) => ({
                     } else if (actionData.action === 'add_transaction') {
                         let categoryId = actionData.data.category_id;
 
-                        // If no category provided, fetch categories and use default
-                        if (!categoryId) {
+                        // Identify if we need to fetch a real category ID
+                        const isInvalidId = !categoryId || categoryId === "USE_ACTUAL_UUID_FROM_CATEGORIES";
+
+                        if (isInvalidId) {
                             try {
                                 const categories = await getCategories();
                                 if (categories && categories.length > 0) {
-                                    // Simple logic: try to match name, else use first
+                                    // Try to match by description if possible
                                     const desc = (actionData.data.description || '').toLowerCase();
+                                    // Or prompt text if available? No, we don't have prompt here.
+                                    // Best effort: find category match
                                     const match = categories.find(c => desc.includes(c.name.toLowerCase()));
-                                    categoryId = match ? match.id : categories[0].id;
+                                    categoryId = match ? match.id : categories[0].id; // Fallback to first category
                                 }
                             } catch (err) {
                                 console.error("Failed to fetch categories for default", err);
