@@ -15,4 +15,6 @@ ollama
 yfinance
 edge-tts
 ffmpeg-python
-phonemizer>=3.2.1
+g2p_en
+# phonemizer>=3.2.1  # Removed - no longer needed (was for Allosaurus)
+# allosaurus  # Removed - audio upload feature removed

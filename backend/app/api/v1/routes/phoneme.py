@@ -61,53 +61,9 @@ async def convert_text_to_visemes(request: PhonemeRequest):
         )
 
 
-@router.post("/audio-to-visemes", response_model=List[VisemeFrame])
-async def convert_audio_to_visemes(file: UploadFile = File(...)):
-    """
-    Convert audio file (WAV/MP3) to timed viseme sequence using Allosaurus
-    
-    Args:
-        file: Audio file upload
-    
-    Returns:
-        List of viseme frames with precise timing
-    """
-    import tempfile
-    import os
-    import shutil
-    from app.services.phoneme_service import audio_to_visemes
-    
-    temp_file_path = None
-    try:
-        # Create temp file
-        suffix = os.path.splitext(file.filename)[1]
-        if not suffix:
-            suffix = ".wav" # Default to wav if no extension
-            
-        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as temp_file:
-            shutil.copyfileobj(file.file, temp_file)
-            temp_file_path = temp_file.name
-            
-        # Process audio
-        visemes = audio_to_visemes(temp_file_path)
-        
-        # Convert to response model (VisemeFrame)
-        # VisemeFrame expects: viseme, start, duration
-        return [VisemeFrame(**v) for v in visemes]
-        
-    except Exception as e:
-        print(f"❌ Error in audio-to-visemes: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to process audio: {str(e)}"
-        )
-    finally:
-        # Cleanup temp file
-        if temp_file_path and os.path.exists(temp_file_path):
-            try:
-                os.unlink(temp_file_path)
-            except:
-                pass
+
+# Audio upload endpoint removed - user requested text-only support
+
 
 
 @router.get("/health")
@@ -139,6 +95,7 @@ async def phoneme_health_check():
 async def convert_tts_to_visemes(request: PhonemeRequest, req: Request = None):
     """
     Generate audio from text using edge-tts and return visemes + audio URL.
+    Uses direct text → ARPABET → shape keys conversion (LOGIOS + Custom Mappings).
     
     Args:
         request: PhonemeRequest with text
@@ -150,7 +107,7 @@ async def convert_tts_to_visemes(request: PhonemeRequest, req: Request = None):
     """
     import os
     from app.services.tts_service import generate_speech, cleanup_old_files
-    from app.services.phoneme_service import audio_to_visemes
+    from app.services.phoneme_service import text_to_viseme_sequence
     from fastapi import Request
     
     try:
@@ -161,15 +118,11 @@ async def convert_tts_to_visemes(request: PhonemeRequest, req: Request = None):
         cleanup_old_files()
 
         # Generate audio (mp3)
-        # Assuming backend is running on localhost:8000 for now, or use request.base_url
         audio_path = await generate_speech(request.text)
         
-        # Audio path is relative "generated_audio/uuid.mp3"
-        # We need absolute path for processing
-        abs_audio_path = os.path.abspath(audio_path)
-        
-        # Process audio to visemes
-        visemes = audio_to_visemes(abs_audio_path)
+        # Process TEXT to visemes (Direct LOGIOS approach)
+        # We no longer process the audio file for visemes
+        viseme_data = text_to_viseme_sequence(request.text, request.language)
         
         # Construct public URL
         # If behind proxy (ngrok etc) this might need adjustment, but for localhost it's fine
@@ -178,7 +131,7 @@ async def convert_tts_to_visemes(request: PhonemeRequest, req: Request = None):
         
         return {
             "audio_url": audio_url,
-            "visemes": [VisemeFrame(**v) for v in visemes]
+            "visemes": [VisemeFrame(**v) for v in viseme_data]
         }
         
     except Exception as e:

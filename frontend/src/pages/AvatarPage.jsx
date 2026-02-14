@@ -98,8 +98,7 @@ const AvatarPage = () => {
         setShowLatestMessage(true); // Show message when speech starts
     };
 
-    const [audioFile, setAudioFile] = useState(null); // State for uploaded audio
-    const fileInputRef = useRef(null);
+
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -110,7 +109,7 @@ const AvatarPage = () => {
     };
 
     const handleSpeaking = () => {
-        if (!speechText.trim() && !audioFile) return;
+        if (!speechText.trim()) return;
         setCallavatar(true)
         setIschatting(true)
         setText(speechText)
@@ -157,11 +156,11 @@ const AvatarPage = () => {
                     <ambientLight intensity={0.6} />
                     <directionalLight position={[2, 2, 5]} intensity={2} />
                     <Avatar
-                        model={ismale ? '/models/Male6.glb' : '/models/Female.glb'}
+                        model={ismale ? '/models/maleEyeShapeKeys.glb' : '/models/Female7.glb'}
                         handpos={ismale ? 1.3 : 1.15}
                         ischatting={ischatting}
+                        ismale={ismale}
                         text={text ? text : ""}
-                        audioFile={audioFile}
                         speakTrigger={speakTrigger}
                         onSpeechStart={handleSpeechStart}
                         emotions={currentEmotion}
@@ -188,7 +187,6 @@ const AvatarPage = () => {
                                 value={speechText}
                                 onChange={(e) => {
                                     setSpeechText(e.target.value);
-                                    if (audioFile) setAudioFile(null); // Clear audio file if user types
                                 }}
                                 onKeyPress={(e) => {
                                     if (e.key === 'Enter' && speechText.trim()) {

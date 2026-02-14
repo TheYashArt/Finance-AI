@@ -1,2 +1,17 @@
-working on emotions
-need to add happy and sad emotions teak the smile as needed
+added new shape keys for mouth shapes 
+check them out and then pply those for the visemes
+
+head shape keys -
+mouthTH
+mouthO
+mouthSZTD
+mouthFV
+mouthWide
+mouthCHJSH
+
+teeth shape keys -
+teethO
+teethTH
+teethWide
+
+file name - maleEyeShapeKeys2.glb
