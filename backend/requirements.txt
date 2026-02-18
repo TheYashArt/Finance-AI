@@ -15,6 +15,7 @@ ollama
 yfinance
 edge-tts
 ffmpeg-python
+# G2P: app uses g2p-arpabet when available, else g2p_en (same ARPABET API)
 g2p_en
-# phonemizer>=3.2.1  # Removed - no longer needed (was for Allosaurus)
-# allosaurus  # Removed - audio upload feature removed
+g2p-arpabet
+allosaurus

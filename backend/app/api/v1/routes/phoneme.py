@@ -4,7 +4,9 @@ from typing import List
 from app.services.phoneme_service import (
     text_to_phonemes,
     text_to_viseme_sequence,
-    estimate_duration
+    text_to_grouped_viseme_sequence,
+    estimate_duration,
+    _g2p_backend,
 )
 
 router = APIRouter()
@@ -80,7 +82,7 @@ async def phoneme_health_check():
         
         return {
             "status": "healthy",
-            "backend": "espeak",
+            "backend": _g2p_backend,
             "test_output": test_phonemes
         }
 
@@ -121,8 +123,9 @@ async def convert_tts_to_visemes(request: PhonemeRequest, req: Request = None):
         audio_path = await generate_speech(request.text)
         
         # Process TEXT to visemes (Direct LOGIOS approach)
-        # We no longer process the audio file for visemes
+        # Generate both regular visemes (for backward compatibility) and grouped visemes (NEW)
         viseme_data = text_to_viseme_sequence(request.text, request.language)
+        grouped_viseme_data = text_to_grouped_viseme_sequence(request.text, request.language)
         
         # Construct public URL
         # If behind proxy (ngrok etc) this might need adjustment, but for localhost it's fine
@@ -131,7 +134,9 @@ async def convert_tts_to_visemes(request: PhonemeRequest, req: Request = None):
         
         return {
             "audio_url": audio_url,
-            "visemes": [VisemeFrame(**v) for v in viseme_data]
+            "visemes": [VisemeFrame(**v) for v in viseme_data],
+            "grouped_visemes": grouped_viseme_data,  # NEW: Grouped phoneme approach
+            "phonemes": text_to_phonemes(request.text, request.language).split(" ")
         }
         
     except Exception as e:
@@ -139,4 +144,71 @@ async def convert_tts_to_visemes(request: PhonemeRequest, req: Request = None):
         raise HTTPException(
             status_code=500,
             detail=f"Failed to process TTS: {str(e)}"
+        )
+
+
+@router.post("/phonemes")
+async def extract_phonemes_from_audio(file: UploadFile = File(...)):
+    """
+    Extract phonemes from uploaded audio file using Allosaurus
+    Returns merged viseme timeline
+    
+    Pipeline:
+    1. Audio -> IPA phonemes (Allosaurus)
+    2. IPA -> ARPABET conversion
+    3. ARPABET -> Viseme mapping
+    4. Viseme merging (consecutive + micro-segment removal + anticipation)
+    
+    Args:
+        file: Audio file (wav, mp3, etc.)
+        
+    Returns:
+        {
+            "ipa_phonemes": [...],
+            "arpabet_phonemes": [...],
+            "visemes": [{"viseme": "OPEN", "start": 0.12, "end": 0.34}, ...]
+        }
+    """
+    import tempfile
+    import os
+    from app.services.allosaurus_service import get_phonemes_from_audio, ipa_to_arpabet
+    from app.services.viseme_mapper import phonemes_to_viseme_timeline
+    
+    try:
+        # Save uploaded file temporarily
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
+            content = await file.read()
+            tmp.write(content)
+            tmp_path = tmp.name
+        
+        try:
+            # Step 1: Extract IPA phonemes using Allosaurus
+            ipa_phonemes = get_phonemes_from_audio(tmp_path)
+            
+            # Step 2: Convert IPA to ARPABET
+            arpabet_phonemes = ipa_to_arpabet(ipa_phonemes)
+            
+            # Step 3: Convert ARPABET to merged viseme timeline
+            viseme_timeline = phonemes_to_viseme_timeline(
+                arpabet_phonemes,
+                apply_anticipation=True
+            )
+            
+            return {
+                "ipa_phonemes": ipa_phonemes,
+                "arpabet_phonemes": arpabet_phonemes,
+                "visemes": viseme_timeline
+            }
+        finally:
+            # Cleanup temp file
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+                
+    except Exception as e:
+        print(f"❌ Error in phoneme extraction: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to extract phonemes: {str(e)}"
         )

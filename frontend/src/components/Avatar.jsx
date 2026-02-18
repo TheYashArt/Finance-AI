@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
-import { textToVisemes, textToVisemesAPI, textToAudioVisemesAPI, getVisemeMorphTargets } from "../utils/visemeUtils";
+// Unused utils removed to prevent confusion
+// import { textToVisemes, textToVisemesAPI, textToAudioVisemesAPI, getVisemeMorphTargets } from "../utils/visemeUtils";
 import { speakText, stopSpeaking } from "../utils/ttsUtils";
+import { useLipSync } from "../hooks/useLipSync";
+import { clampMorphInfluence } from "../utils/morphUtils";
 
 function Avatar({ model, handpos, ischatting, text, speakTrigger, onSpeechStart, emotions, ismale }) {
     const { scene } = useGLTF(model);
@@ -219,17 +222,17 @@ function Avatar({ model, handpos, ischatting, text, speakTrigger, onSpeechStart,
     const eyelidleft = useRef(null);
 
     // ============================================
-    // VISEME LIP SYNC STATE
+    // VISEME LIP SYNC STATE (NEW SYSTEM)
     // ============================================
-    // visemeSequence: Array of {viseme, start, duration} objects generated from text
-    // isPlayingVisemes: Boolean flag to control when viseme animation is active
-    // visemePlaybackTime: Tracks elapsed time during viseme playback
-    // currentVisemeIndex: Index of the currently playing viseme in the sequence
-    const [visemeSequence, setVisemeSequence] = useState([]);
+    // Hook handles audio playback, timeline, and frame updates
+    const { speak, stop: stopLipSync, isPlaying: isLipSyncing } = useLipSync(headMesh, teethMesh, onSpeechStart);
+
+    // Legacy flags maintained for compatibility with other effects
     const [isPlayingVisemes, setIsPlayingVisemes] = useState(false);
-    const visemePlaybackTime = useRef(0);
-    const currentVisemeIndex = useRef(0);
-    const durationRatio = useRef(1); // Ratio to scale viseme timing to audio duration
+
+    useEffect(() => {
+        setIsPlayingVisemes(isLipSyncing);
+    }, [isLipSyncing]);
 
     const eyeLidBone = useRef(null);
     const blinkTime = useRef(0);
@@ -414,7 +417,7 @@ function Avatar({ model, handpos, ischatting, text, speakTrigger, onSpeechStart,
                 }
 
                 if (hDict.blink !== undefined) {
-                    hInfl[hDict.blink] = blinkValue; // Full blink at peak
+                    hInfl[hDict.blink] = clampMorphInfluence(blinkValue);
                 }
 
                 // Also apply to teeth if it has the shape key
@@ -422,7 +425,7 @@ function Avatar({ model, handpos, ischatting, text, speakTrigger, onSpeechStart,
                     const tDict = teethMesh.current.morphTargetDictionary;
                     const tInfl = teethMesh.current.morphTargetInfluences;
                     if (tDict.blink !== undefined) {
-                        tInfl[tDict.blink] = blinkValue;
+                        tInfl[tDict.blink] = clampMorphInfluence(blinkValue);
                     }
                 }
             } else {
@@ -456,81 +459,26 @@ function Avatar({ model, handpos, ischatting, text, speakTrigger, onSpeechStart,
     // ============================================
     // TEXT/AUDIO TO VISEME CONVERSION + PLAYBACK
     // ============================================
+    // ============================================
+    // TEXT TO VISEME CONVERSION + AUDIO PLAYBACK
+    // ============================================
     useEffect(() => {
-        if (speakTrigger > 0) {
-            // STOP previous audio if any
-            stopSpeaking();
-
-            // Clean up previous audio object URL if it exists
-            if (window.currentAudio) {
-                window.currentAudio.pause();
-                window.currentAudio = null;
-            }
-
-            // TEXT INPUT (Backend TTS with LOGIOS)
-            if (text && text.trim() !== '') {
-
-                // Use new Backend TTS API
-                textToAudioVisemesAPI(text).then(data => {
-                    const { audio_url, visemes } = data;
-
-                    setVisemeSequence(visemes);
-                    currentVisemeIndex.current = 0; // Initialize index here
-                    // Play returned audio URL with cache busting to handle single-file overwrite
-                    const audio = new Audio(`${audio_url}?t=${new Date().getTime()}`);
-                    window.currentAudio = audio; // Track current audio
-
-                    audio.onloadedmetadata = () => {
-                        console.log("Audio Loaded. Duration:", audio.duration);
-                        if (visemes.length > 0 && audio.duration && audio.duration !== Infinity) {
-                            const lastViseme = visemes[visemes.length - 1];
-                            const visemeDuration = lastViseme.start + lastViseme.duration;
-
-                            // Calculate scaling ratio
-                            durationRatio.current = visemeDuration / audio.duration;
-                            console.log(`⏱️ Syncing: Audio ${audio.duration.toFixed(2)}s vs Visemes ${visemeDuration.toFixed(2)}s (Ratio: ${durationRatio.current.toFixed(2)})`);
-                        } else {
-                            durationRatio.current = 1;
-                        }
-                    };
-
-                    audio.onplay = () => {
-                        setIsPlayingVisemes(true); // START VISUALS NOW
-                        visemePlaybackTime.current = 0;
-                        if (onSpeechStart) onSpeechStart(); // Trigger callback
-                    };
-
-                    audio.onended = () => {
-                        window.currentAudio = null;
-                    };
-
-                    audio.play().catch(e => console.error("Error playing TTS audio:", e));
-
-                }).catch(error => {
-                    console.error("Error converting text to visemes:", error);
-                });
-            }
+        if (speakTrigger > 0 && text && text.trim() !== '') {
+            speak(text);
         }
 
-
-        // Cleanup function for component unmount
         return () => {
-            if (window.currentAudio) {
-                window.currentAudio.pause();
-                window.currentAudio = null;
-            }
+            stopLipSync();
         };
+    }, [speakTrigger, text, speak, stopLipSync]);
 
-    }, [speakTrigger]); // Removed audioFile dependency
-
-    // Stop visemes and audio when text is cleared
+    // Stop lip sync and audio when text is cleared
     useEffect(() => {
         if (!text || text.trim() === '') {
-            setIsPlayingVisemes(false);
-            setVisemeSequence([]);
-            stopSpeaking(); // Stop any ongoing audio
+            stopLipSync();
+            stopSpeaking(); // Stop any legacy global audio if necessary
         }
-    }, [text]);
+    }, [text, stopLipSync]);
 
 
     // This Function Contorls how The model is adjusted when he is talking
@@ -572,173 +520,10 @@ function Avatar({ model, handpos, ischatting, text, speakTrigger, onSpeechStart,
     // VISEME-DRIVEN LIP SYNC ANIMATION
     // ============================================
     // This useFrame runs every frame (~60fps) to update mouth morph targets
-    useFrame((_, delta) => {
-        if (!headMesh.current || !teethMesh.current) return;
-
-        time.current += delta;
-
-        // Get morph target dictionaries and influences arrays
-        const hDict = headMesh.current.morphTargetDictionary; // Maps morph target names to indices
-        const hInfl = headMesh.current.morphTargetInfluences; // Array of current morph values (0-1)
-        const tDict = teethMesh.current.morphTargetDictionary;
-        const tInfl = teethMesh.current.morphTargetInfluences;
-
-        // ============================================
-        // VISEME PLAYBACK (when speaking)
-        // ============================================
-        if (isPlayingVisemes && visemeSequence.length > 0) {
-            // ============================================
-            // SYNC WITH AUDIO TIMESTAMP
-            // ============================================
-            const AUDIO_LATENCY = 0.0; // Adjust if lips are ahead (positive number delays visuals)
-
-            // Use precise audio time if available, otherwise fallback to delta accumulation
-            if (window.currentAudio && !window.currentAudio.paused) {
-                // We subtract a small offset because audio hardware has latency.
-                // Scale the audio time to match the viseme timeline
-                // If audio is shorter than visemes, ratio > 1 (slow down visemes)
-                // If audio is longer than visemes, ratio < 1 (speed up visemes)
-                const scaledTime = (window.currentAudio.currentTime - AUDIO_LATENCY) * durationRatio.current;
-                visemePlaybackTime.current = Math.max(0, scaledTime);
-            } else {
-                visemePlaybackTime.current += delta;
-            }
-
-            // Get current viseme from sequence
-            let currentViseme = visemeSequence[currentVisemeIndex.current];
-
-            // ============================================
-            // ADVANCE TO NEXT VISEME
-            // ============================================
-            // Find the correct viseme for the current timestamp
-            // Instead of just checking next, we scan from current position
-            // This handles skips or lags gracefully
-
-            // 1. If current viseme is finished (time > start + duration), move forward
-            while (
-                currentVisemeIndex.current < visemeSequence.length - 1 &&
-                visemePlaybackTime.current >= visemeSequence[currentVisemeIndex.current + 1].start
-            ) {
-                currentVisemeIndex.current++;
-                currentViseme = visemeSequence[currentVisemeIndex.current];
-            }
-
-            // 2. If we somehow jumped HEAD of the audio (rewind), move backward
-            while (
-                currentVisemeIndex.current > 0 &&
-                visemePlaybackTime.current < visemeSequence[currentVisemeIndex.current].start
-            ) {
-                currentVisemeIndex.current--;
-                currentViseme = visemeSequence[currentVisemeIndex.current];
-            }
-
-            // ============================================
-            // CHECK IF PLAYBACK COMPLETE
-            // ============================================
-            // If we're on the last viseme and past its end time, stop playback
-            if (currentVisemeIndex.current === visemeSequence.length - 1) {
-                const lastViseme = visemeSequence[visemeSequence.length - 1];
-                if (visemePlaybackTime.current >= lastViseme.start + lastViseme.duration + 0.5) { // +0.5 buffer to clear mouth
-                    setIsPlayingVisemes(false);
-                    visemePlaybackTime.current = 0;
-                    currentVisemeIndex.current = 0;
-                }
-            }
-
-            // Get morph target values for current viseme
-            // PASS shape_keys from backend if available for precise control
-            const morphTargets = getVisemeMorphTargets(currentViseme.viseme, currentViseme.shape_keys);
-
-            // Calculate progress through current viseme (0 to 1)
-            const visemeProgress = (visemePlaybackTime.current - currentViseme.start) / currentViseme.duration;
-
-            // Smooth blending factor - controls transition speed
-            // Lower = smoother but slower, Higher = faster but more abrupt
-            const blendSpeed = 0.10;
-
-            // Helper function to smoothly interpolate
-            const lerp = (current, target, factor) => current + (target - current) * factor;
-
-            // ============================================
-            // APPLY MORPH TARGETS TO MOUTH
-            // ============================================
-            // Each morph target controls a different aspect of mouth shape
-            // Values range from 0 (no effect) to 1 (full effect)
-
-            // MOUTH OPEN - Controls how wide the mouth opens vertically
-            if (hDict.mouthOpen !== undefined) {
-                const targetValue = morphTargets.mouthOpen * 2; // Intensified by 40% (2.2 -> 3.0)
-                const newValue = lerp(hInfl[hDict.mouthOpen], targetValue, blendSpeed);
-                hInfl[hDict.mouthOpen] = newValue;
-
-                // Apply same value to teeth mesh if it exists
-                if (tDict.mouthOpen !== undefined) {
-                    tInfl[tDict.mouthOpen] = newValue + 1;
-                }
-            }
-
-            // MOUTH SMILE - Controls smile/grin shape
-            if (hDict.mouthSmile !== undefined) {
-                const targetValue = morphTargets.mouthSmile * 0.6; // Intensified by 40% (1.2 -> 1.7)
-                const newValue = lerp(hInfl[hDict.mouthSmile], targetValue, blendSpeed);
-                hInfl[hDict.mouthSmile] = newValue;
-                if (tDict.mouthSmile !== undefined) {
-                    tInfl[tDict.mouthSmile] = newValue;
-                }
-            }
-
-            // MOUTH FUNNEL - Creates "O" shape (like saying "ooh")
-            if (hDict.mouthFunnel !== undefined) {
-                const targetValue = morphTargets.mouthFunnel * 2.2; // Intensified by 40% (2.3 -> 3.2)
-                const newValue = lerp(hInfl[hDict.mouthFunnel], targetValue, blendSpeed);
-                hInfl[hDict.mouthFunnel] = newValue;
-            }
-
-            // MOUTH PUCKER - Pushes lips forward (like kissing or "oo" sound)
-            if (hDict.mouthPucker !== undefined) {
-                const targetValue = morphTargets.mouthPucker * 2.6; // Intensified by 40% (2.3 -> 3.2)
-                const newValue = lerp(hInfl[hDict.mouthPucker], targetValue, blendSpeed);
-                hInfl[hDict.mouthPucker] = newValue;
-            }
-
-            // JAW OPEN - Controls jaw drop for wide mouth shapes
-            if (hDict.jawOpen !== undefined) {
-                const targetValue = morphTargets.jawOpen * 2.0; // Intensified by 40% (2.5 -> 3.5)
-                const newValue = lerp(hInfl[hDict.jawOpen], targetValue, blendSpeed);
-                hInfl[hDict.jawOpen] = newValue;
-            }
-
-            // ============================================
-            // FORCE MESH UPDATE
-            // ============================================
-            // Create new arrays to trigger React Three Fiber's change detection
-            // Without this, the mesh won't re-render even though values changed
-            headMesh.current.morphTargetInfluences = [...hInfl];
-            teethMesh.current.morphTargetInfluences = [...tInfl];
-
-        } else {
-            // ============================================
-            // RESET TO NEUTRAL (when not speaking)
-            // ============================================
-            // Set all morph targets back to neutral/rest position
-            if (hDict.mouthOpen !== undefined) {
-                hInfl[hDict.mouthOpen] = 0.05; // Slightly open for natural look
-                if (tDict.mouthOpen !== undefined) {
-                    tInfl[tDict.mouthOpen] = 0.05;
-                }
-            }
-            if (hDict.mouthSmile !== undefined) {
-                hInfl[hDict.mouthSmile] = 0; // No smile
-                if (tDict.mouthSmile !== undefined) {
-                    tInfl[tDict.mouthSmile] = 0;
-                }
-            }
-            // Reset all other morph targets to 0
-            if (hDict.mouthFunnel !== undefined) hInfl[hDict.mouthFunnel] = 0;
-            if (hDict.mouthPucker !== undefined) hInfl[hDict.mouthPucker] = 0;
-            if (hDict.jawOpen !== undefined) hInfl[hDict.jawOpen] = 0;
-        }
-    });
+    // ============================================
+    // OLD VISEME ANIMATION LOOP REMOVED
+    // The useLipSync hook now handles all shape key updates efficiently.
+    // ============================================
 
     // This Function targets Arms for animation
     useEffect(() => {
@@ -895,8 +680,8 @@ function Avatar({ model, handpos, ischatting, text, speakTrigger, onSpeechStart,
                 }
                 // Apply smile to mouthSmile morph target
                 if (hDict.mouthSmile !== undefined) {
-                    const currentValue = hInfl[hDict.mouthSmile] || 0;
-                    hInfl[hDict.mouthSmile] = lerp(currentValue, targetSmile, blendSpeed);
+                    const currentValue = Number(hInfl[hDict.mouthSmile]) || 0;
+                    hInfl[hDict.mouthSmile] = clampMorphInfluence(lerp(currentValue, targetSmile, blendSpeed));
 
                     // Debug log (only when value changes significantly)
                     if (Math.abs(hInfl[hDict.mouthSmile] - targetSmile) > 0.01) {
@@ -911,18 +696,18 @@ function Avatar({ model, handpos, ischatting, text, speakTrigger, onSpeechStart,
 
                 // Also apply to teeth if available
                 if (tDict.mouthSmile !== undefined) {
-                    const currentValue = tInfl[tDict.mouthSmile] || 0;
-                    tInfl[tDict.mouthSmile] = lerp(currentValue, targetSmile, blendSpeed);
+                    const currentValue = Number(tInfl[tDict.mouthSmile]) || 0;
+                    tInfl[tDict.mouthSmile] = clampMorphInfluence(lerp(currentValue, targetSmile, blendSpeed));
                 }
 
                 // Add slight mouth open for natural smile (optional)
                 if (hDict.viseme_aa !== undefined) {
-                    const currentValue = hInfl[hDict.viseme_aa] || 0;
-                    hInfl[hDict.viseme_aa] = lerp(currentValue, targetSmile * 0.2, blendSpeed);
+                    const currentValue = Number(hInfl[hDict.viseme_aa]) || 0;
+                    hInfl[hDict.viseme_aa] = clampMorphInfluence(lerp(currentValue, targetSmile * 0.2, blendSpeed));
                 }
                 if (tDict.viseme_aa !== undefined) {
-                    const currentValue = tInfl[tDict.viseme_aa] || 0;
-                    tInfl[tDict.viseme_aa] = lerp(currentValue, targetSmile * 0.2, blendSpeed);
+                    const currentValue = Number(tInfl[tDict.viseme_aa]) || 0;
+                    tInfl[tDict.viseme_aa] = clampMorphInfluence(lerp(currentValue, targetSmile * 0.2, blendSpeed));
                 }
 
             }
@@ -1417,14 +1202,13 @@ function Avatar({ model, handpos, ischatting, text, speakTrigger, onSpeechStart,
                 }
 
                 if (hDict.blink !== undefined) {
-                    const currentValue = hInfl[hDict.blink] || 0;
-                    hInfl[hDict.blink] = 0.4;
+                    hInfl[hDict.blink] = clampMorphInfluence(0.4);
                 }
 
                 // Apply smile to mouthSmile morph target
                 if (hDict.mouthSmile !== undefined) {
-                    const currentValue = hInfl[hDict.mouthSmile] || 0;
-                    hInfl[hDict.mouthSmile] = lerp(currentValue, targetSmile, blendSpeed);
+                    const currentValue = Number(hInfl[hDict.mouthSmile]) || 0;
+                    hInfl[hDict.mouthSmile] = clampMorphInfluence(lerp(currentValue, targetSmile, blendSpeed));
 
                     // Debug log (only when value changes significantly)
                     if (Math.abs(hInfl[hDict.mouthSmile] - targetSmile) > 0.01) {
@@ -1439,18 +1223,18 @@ function Avatar({ model, handpos, ischatting, text, speakTrigger, onSpeechStart,
 
                 // Also apply to teeth if available
                 if (tDict.mouthSmile !== undefined) {
-                    const currentValue = tInfl[tDict.mouthSmile] || 0;
-                    tInfl[tDict.mouthSmile] = lerp(currentValue, targetSmile, blendSpeed);
+                    const currentValue = Number(tInfl[tDict.mouthSmile]) || 0;
+                    tInfl[tDict.mouthSmile] = clampMorphInfluence(lerp(currentValue, targetSmile, blendSpeed));
                 }
 
                 // Add slight mouth open for natural smile (optional)
                 if (hDict.viseme_aa !== undefined) {
-                    const currentValue = hInfl[hDict.viseme_aa] || 0;
-                    hInfl[hDict.viseme_aa] = lerp(currentValue, targetSmile * 0.2, blendSpeed);
+                    const currentValue = Number(hInfl[hDict.viseme_aa]) || 0;
+                    hInfl[hDict.viseme_aa] = clampMorphInfluence(lerp(currentValue, targetSmile * 0.2, blendSpeed));
                 }
                 if (tDict.viseme_aa !== undefined) {
-                    const currentValue = tInfl[tDict.viseme_aa] || 0;
-                    tInfl[tDict.viseme_aa] = lerp(currentValue, targetSmile * 0.2, blendSpeed);
+                    const currentValue = Number(tInfl[tDict.viseme_aa]) || 0;
+                    tInfl[tDict.viseme_aa] = clampMorphInfluence(lerp(currentValue, targetSmile * 0.2, blendSpeed));
                 }
 
             }
@@ -1545,8 +1329,8 @@ function Avatar({ model, handpos, ischatting, text, speakTrigger, onSpeechStart,
 
                 // Apply smile to mouthSmile morph target
                 if (hDict.mouthSmile !== undefined) {
-                    const currentValue = hInfl[hDict.mouthSmile] || 0;
-                    hInfl[hDict.mouthSmile] = lerp(currentValue, targetSmile, blendSpeed);
+                    const currentValue = Number(hInfl[hDict.mouthSmile]) || 0;
+                    hInfl[hDict.mouthSmile] = clampMorphInfluence(lerp(currentValue, targetSmile, blendSpeed));
 
                     // Debug log (only when value changes significantly)
                     if (Math.abs(hInfl[hDict.mouthSmile] - targetSmile) > 0.01) {

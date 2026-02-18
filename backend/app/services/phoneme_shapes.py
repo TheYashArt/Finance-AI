@@ -8,172 +8,188 @@ to drive realistic lip-sync animation on 3D avatars.
 """
 
 # Complete mapping of 39 ARPABET phonemes to shape keys
-# Each phoneme has specific values for lips and teeth/tongue controls
+# Refined for clearer mouth shapes: bilabials closed, sibilants narrow, vowels distinct
 PHONEME_SHAPE_KEYS = {
-    # Vowels
+    # Vowels - open jaw, distinct lip shapes
     'AA': {
-        'lips': {'Lips_Open_Wide': 0.8, 'Lips_Wide': 0.5},
+        'lips': {'Lips_Open_Wide': 0.85, 'Lips_Wide': 0.45, 'Lips_Round': 0.0},
         'teeth': {'TeethTongue_Open': 1.0}
     },
     'AE': {
-        'lips': {'Lips_Wide': 0.7, 'Lips_Open_Wide': 0.7},
-        'teeth': {'TeethTongue_Bite': 0.3}
+        'lips': {'Lips_Wide': 0.75, 'Lips_Open_Wide': 0.7, 'Lips_Corner_Up': 0.15},
+        'teeth': {'TeethTongue_Open': 0.85, 'TeethTongue_Bite': 0.2}
     },
     'AH': {
-        'lips': {'Lips_Open_Wide': 0.5, 'Lips_Round': 0.2},
-        'teeth': {'TeethTongue_Open': 0.8}
+        'lips': {'Lips_Open_Wide': 0.55, 'Lips_Round': 0.15, 'Lips_Wide': 0.2},
+        'teeth': {'TeethTongue_Open': 0.85}
     },
     'AO': {
-        'lips': {'Lips_Round': 0.7, 'Lips_Protude': 0.6},
-        'teeth': {'TeethTongue_Open': 0.6}
+        'lips': {'Lips_Round': 0.7, 'Lips_Protude': 0.5, 'Lips_Open_Wide': 0.5},
+        'teeth': {'TeethTongue_Open': 0.65}
     },
     'AW': {
-        'lips': {'Lips_Round': 0.8, 'Lips_Open_Wide': 0.6},
+        'lips': {'Lips_Round': 0.75, 'Lips_Open_Wide': 0.6, 'Lips_Protude': 0.35},
         'teeth': {'TeethTongue_Open': 0.7}
     },
     'AY': {
-        'lips': {'Lips_Wide': 0.6, 'Lips_Corner_Up': 0.3},
+        'lips': {'Lips_Wide': 0.65, 'Lips_Corner_Up': 0.35, 'Lips_Open_Wide': 0.45},
         'teeth': {'TeethTongue_Open': 0.5}
     },
     'EH': {
-        'lips': {'Lips_Wide': 0.7, 'Lips_Open_Wide': 0.6},
-        'teeth': {'TeethTongue_Bite': 0.3}
+        'lips': {'Lips_Wide': 0.75, 'Lips_Open_Wide': 0.55, 'Lips_Corner_Up': 0.25},
+        'teeth': {'TeethTongue_Open': 0.6, 'TeethTongue_Bite': 0.2}
     },
     'ER': {
-        'lips': {'Lips_Round': 0.4, 'Lips_Open_Wide': 0.5},
-        'teeth': {'TeethTongue_Open': 0.9}
+        'lips': {'Lips_Round': 0.35, 'Lips_Open_Wide': 0.5, 'Lips_Wide': 0.2},
+        'teeth': {'TeethTongue_Open': 0.85}
     },
     'EY': {
-        'lips': {'Lips_Wide': 0.8, 'Lips_Corner_Up': 0.4},
-        'teeth': {'TeethTongue_Open': 0.4}
+        'lips': {'Lips_Wide': 0.8, 'Lips_Corner_Up': 0.4, 'Lips_Open_Wide': 0.4},
+        'teeth': {'TeethTongue_Open': 0.45}
     },
     'IH': {
-        'lips': {'Lips_Wide': 0.9, 'Lips_Corner_Up': 0.3},
+        'lips': {'Lips_Wide': 0.9, 'Lips_Corner_Up': 0.35, 'Lips_Open_Wide': 0.4},
         'teeth': {'TeethTongue_Open': 0.5}
     },
     'IY': {
-        'lips': {'Lips_Wide': 1.0, 'Lips_Corner_Up': 0.5},
+        'lips': {'Lips_Wide': 1.0, 'Lips_Corner_Up': 0.5, 'Lips_Open_Wide': 0.35},
         'teeth': {'TeethTongue_Open': 0.4}
     },
     'OW': {
-        'lips': {'Lips_Round': 0.9, 'Lips_Purse_Narrow': 0.6},
-        'teeth': {'TeethTongue_Open': 0.3}
+        'lips': {'Lips_Round': 0.9, 'Lips_Purse_Narrow': 0.55, 'Lips_Open_Wide': 0.25},
+        'teeth': {'TeethTongue_Open': 0.25}
     },
     'OY': {
-        'lips': {'Lips_Round': 0.7, 'Lips_Protude': 0.5, 'Lips_Wide': 0.3},
+        'lips': {'Lips_Round': 0.7, 'Lips_Protude': 0.45, 'Lips_Wide': 0.25, 'Lips_Open_Wide': 0.4},
         'teeth': {'TeethTongue_Open': 0.5}
     },
     'UH': {
-        'lips': {'Lips_Round': 0.8, 'Lips_Purse_Narrow': 0.7},
-        'teeth': {'TeethTongue_Open': 0.2}
+        'lips': {'Lips_Round': 0.8, 'Lips_Purse_Narrow': 0.65, 'Lips_Open_Wide': 0.2},
+        'teeth': {'TeethTongue_Open': 0.15}
     },
     'UW': {
-        'lips': {'Lips_Round': 1.0, 'Lips_Purse_Narrow': 0.9},
-        'teeth': {'TeethTongue_Open': 0.1}
+        'lips': {'Lips_Round': 1.0, 'Lips_Purse_Narrow': 0.85, 'Lips_Open_Wide': 0.1},
+        'teeth': {'TeethTongue_Open': 0.08}
     },
-    
-    # Consonants
+    # Reduced/schwa vowels (g2p_en may output these)
+    'AX': {
+        'lips': {'Lips_Open_Wide': 0.5, 'Lips_Round': 0.1, 'Lips_Wide': 0.2},
+        'teeth': {'TeethTongue_Open': 0.8}
+    },
+    'AXR': {
+        'lips': {'Lips_Round': 0.35, 'Lips_Open_Wide': 0.5, 'Lips_Wide': 0.2},
+        'teeth': {'TeethTongue_Open': 0.85}
+    },
+    'IX': {
+        'lips': {'Lips_Wide': 0.85, 'Lips_Corner_Up': 0.3, 'Lips_Open_Wide': 0.38},
+        'teeth': {'TeethTongue_Open': 0.5}
+    },
+
+    # Consonants - bilabials fully closed, fricatives distinct
     'B': {
-        'lips': {'Lips_Protude': 0.9, 'Lips_FV': 0.1},
+        'lips': {'Lips_Open_Wide': 0.0, 'Lips_Wide': 0.0, 'Lips_Purse_Narrow': 0.95, 'Lips_Protude': 0.25, 'Lips_FV': 0.0},
         'teeth': {'TeethTongue_Open': 0.0}
-    },
-    'CH': {
-        'lips': {'Lips_Wide': 0.5, 'Lips_Open_Wide': 0.4},
-        'teeth': {'TeethTongue_TipUp': 0.8, 'TeethTongue_Bite': 0.5}
-    },
-    'D': {
-        'lips': {'Lips_Wide': 0.4, 'Lips_Open_Wide': 0.3},
-        'teeth': {'TeethTongue_TipUp': 0.7, 'TeethTongue_Bite': 0.4}
-    },
-    'DH': {
-        'lips': {'Lips_Wide': 0.5, 'Lips_Corner_Up': 0.2},
-        'teeth': {'TeethTongue_TipUp': 1.0}
-    },
-    'F': {
-        'lips': {'Lips_FV': 1.0, 'Lips_Protude': 0.5},
-        'teeth': {'TeethTongue_Open': 0.3}
-    },
-    'G': {
-        'lips': {'Lips_Round': 0.3, 'Lips_Open_Wide': 0.6},
-        'teeth': {'TeethTongue_Open': 0.8}
-    },
-    'HH': {
-        'lips': {'Lips_Open_Wide': 0.3, 'Lips_Wide': 0.4},
-        'teeth': {'TeethTongue_Open': 0.7}
-    },
-    'JH': {
-        'lips': {'Lips_Wide': 0.5, 'Lips_Open_Wide': 0.4},
-        'teeth': {'TeethTongue_TipUp': 0.8, 'TeethTongue_Bite': 0.5}
-    },
-    'K': {
-        'lips': {'Lips_Round': 0.3, 'Lips_Open_Wide': 0.7},
-        'teeth': {'TeethTongue_Open': 0.9}
-    },
-    'L': {
-        'lips': {'Lips_Wide': 0.4, 'Lips_Open_Wide': 0.3},
-        'teeth': {'TeethTongue_TipUp': 0.6, 'TeethTongue_Bite': 0.3}
-    },
-    'M': {
-        'lips': {'Lips_Protude': 0.8, 'Lips_FV': 0.2},
-        'teeth': {'TeethTongue_Open': 0.0}
-    },
-    'N': {
-        'lips': {'Lips_Wide': 0.4, 'Lips_Open_Wide': 0.3},
-        'teeth': {'TeethTongue_TipUp': 0.7}
-    },
-    'NG': {
-        'lips': {'Lips_Round': 0.4, 'Lips_Open_Wide': 0.5},
-        'teeth': {'TeethTongue_Open': 0.8}
     },
     'P': {
-        'lips': {'Lips_Protude': 0.9, 'Lips_FV': 0.1},
+        'lips': {'Lips_Open_Wide': 0.0, 'Lips_Wide': 0.0, 'Lips_Purse_Narrow': 0.95, 'Lips_Protude': 0.3, 'Lips_FV': 0.0},
         'teeth': {'TeethTongue_Open': 0.0}
     },
-    'R': {
-        'lips': {'Lips_Round': 0.3, 'Lips_Open_Wide': 0.5},
-        'teeth': {'TeethTongue_Open': 0.9}
+    'M': {
+        'lips': {'Lips_Open_Wide': 0.0, 'Lips_Wide': 0.0, 'Lips_Purse_Narrow': 0.9, 'Lips_Protude': 0.25, 'Lips_FV': 0.0},
+        'teeth': {'TeethTongue_Open': 0.0}
+    },
+    'F': {
+        'lips': {'Lips_FV': 1.0, 'Lips_Protude': 0.4, 'Lips_Open_Wide': 0.2},
+        'teeth': {'TeethTongue_Open': 0.25}
+    },
+    'V': {
+        'lips': {'Lips_FV': 1.0, 'Lips_Protude': 0.4, 'Lips_Open_Wide': 0.2},
+        'teeth': {'TeethTongue_Open': 0.25}
+    },
+    'TH': {
+        'lips': {'Lips_Wide': 0.5, 'Lips_Corner_Up': 0.2, 'Lips_Open_Wide': 0.28},
+        'teeth': {'TeethTongue_TipUp': 1.0, 'TeethTongue_Open': 0.2}
+    },
+    'DH': {
+        'lips': {'Lips_Wide': 0.5, 'Lips_Corner_Up': 0.2, 'Lips_Open_Wide': 0.28},
+        'teeth': {'TeethTongue_TipUp': 1.0, 'TeethTongue_Open': 0.2}
     },
     'S': {
-        'lips': {'Lips_Wide': 1.0, 'Lips_Open_Wide': 0.5},
+        'lips': {'Lips_Wide': 0.95, 'Lips_Open_Wide': 0.32, 'Lips_Purse_Narrow': 0.2},
+        'teeth': {'TeethTongue_TipUp': 0.75}
+    },
+    'Z': {
+        'lips': {'Lips_Wide': 0.9, 'Lips_Open_Wide': 0.32, 'Lips_Purse_Narrow': 0.18},
         'teeth': {'TeethTongue_TipUp': 0.7}
     },
     'SH': {
-        'lips': {'Lips_Wide': 0.9, 'Lips_Open_Wide': 0.5},
-        'teeth': {'TeethTongue_TipUp': 0.6}
-    },
-    'T': {
-        'lips': {'Lips_Wide': 0.4, 'Lips_Open_Wide': 0.3},
-        'teeth': {'TeethTongue_TipUp': 0.8, 'TeethTongue_Bite': 0.5}
-    },
-    'TH': {
-        'lips': {'Lips_Wide': 0.5, 'Lips_Corner_Up': 0.2},
-        'teeth': {'TeethTongue_TipUp': 1.0}
-    },
-    'V': {
-        'lips': {'Lips_FV': 1.0, 'Lips_Protude': 0.5},
-        'teeth': {'TeethTongue_Open': 0.3}
-    },
-    'W': {
-        'lips': {'Lips_Round': 0.9, 'Lips_Protude': 0.7},
-        'teeth': {'TeethTongue_Open': 0.2}
-    },
-    'Y': {
-        'lips': {'Lips_Wide': 0.6, 'Lips_Corner_Up': 0.4},
-        'teeth': {'TeethTongue_Open': 0.5}
-    },
-    'Z': {
-        'lips': {'Lips_Wide': 0.9, 'Lips_Open_Wide': 0.5},
-        'teeth': {'TeethTongue_TipUp': 0.6}
+        'lips': {'Lips_Wide': 0.85, 'Lips_Open_Wide': 0.35, 'Lips_Purse_Narrow': 0.25},
+        'teeth': {'TeethTongue_TipUp': 0.65}
     },
     'ZH': {
-        'lips': {'Lips_Wide': 0.8, 'Lips_Open_Wide': 0.5},
-        'teeth': {'TeethTongue_TipUp': 0.6}
+        'lips': {'Lips_Wide': 0.8, 'Lips_Open_Wide': 0.35, 'Lips_Purse_Narrow': 0.2},
+        'teeth': {'TeethTongue_TipUp': 0.65}
     },
-    
-    # Silence
+    'CH': {
+        'lips': {'Lips_Wide': 0.5, 'Lips_Open_Wide': 0.35},
+        'teeth': {'TeethTongue_TipUp': 0.8, 'TeethTongue_Bite': 0.45}
+    },
+    'JH': {
+        'lips': {'Lips_Wide': 0.5, 'Lips_Open_Wide': 0.35},
+        'teeth': {'TeethTongue_TipUp': 0.8, 'TeethTongue_Bite': 0.45}
+    },
+    'D': {
+        'lips': {'Lips_Wide': 0.4, 'Lips_Open_Wide': 0.28},
+        'teeth': {'TeethTongue_TipUp': 0.75, 'TeethTongue_Bite': 0.35}
+    },
+    'T': {
+        'lips': {'Lips_Wide': 0.4, 'Lips_Open_Wide': 0.28},
+        'teeth': {'TeethTongue_TipUp': 0.8, 'TeethTongue_Bite': 0.45}
+    },
+    'L': {
+        'lips': {'Lips_Wide': 0.45, 'Lips_Open_Wide': 0.3},
+        'teeth': {'TeethTongue_TipUp': 0.65, 'TeethTongue_Bite': 0.25}
+    },
+    'N': {
+        'lips': {'Lips_Wide': 0.4, 'Lips_Open_Wide': 0.28},
+        'teeth': {'TeethTongue_TipUp': 0.75}
+    },
+    'R': {
+        'lips': {'Lips_Round': 0.3, 'Lips_Open_Wide': 0.45, 'Lips_Wide': 0.15},
+        'teeth': {'TeethTongue_Open': 0.85}
+    },
+    'G': {
+        'lips': {'Lips_Round': 0.25, 'Lips_Open_Wide': 0.55},
+        'teeth': {'TeethTongue_Open': 0.8}
+    },
+    'K': {
+        'lips': {'Lips_Round': 0.25, 'Lips_Open_Wide': 0.65},
+        'teeth': {'TeethTongue_Open': 0.85}
+    },
+    'NG': {
+        'lips': {'Lips_Round': 0.35, 'Lips_Open_Wide': 0.5},
+        'teeth': {'TeethTongue_Open': 0.75}
+    },
+    'HH': {
+        'lips': {'Lips_Open_Wide': 0.35, 'Lips_Wide': 0.4},
+        'teeth': {'TeethTongue_Open': 0.65}
+    },
+    'W': {
+        'lips': {'Lips_Round': 0.9, 'Lips_Protude': 0.6, 'Lips_Open_Wide': 0.15},
+        'teeth': {'TeethTongue_Open': 0.15}
+    },
+    'Y': {
+        'lips': {'Lips_Wide': 0.65, 'Lips_Corner_Up': 0.4, 'Lips_Open_Wide': 0.4},
+        'teeth': {'TeethTongue_Open': 0.5}
+    },
+
+    # Silence - explicit zeros so any model resets cleanly (no Neutral keys required)
     'sil': {
-        'lips': {'Lips_Neutral': 1.0},
-        'teeth': {'TeethTongue_Neutral': 1.0}
+        'lips': {
+            'Lips_Open_Wide': 0.0, 'Lips_Wide': 0.0, 'Lips_Round': 0.0, 'Lips_Protude': 0.0,
+            'Lips_Purse_Narrow': 0.0, 'Lips_FV': 0.0, 'Lips_Corner_Up': 0.0
+        },
+        'teeth': {'TeethTongue_Open': 0.0, 'TeethTongue_TipUp': 0.0, 'TeethTongue_Bite': 0.0}
     }
 }
 
@@ -239,11 +255,8 @@ def get_shape_keys_for_phoneme(arpabet: str) -> dict:
     import re
     clean_phoneme = re.sub(r'\d+', '', arpabet)
     
-    # Return shape keys or neutral default
-    return PHONEME_SHAPE_KEYS.get(clean_phoneme, {
-        'lips': {'Lips_Neutral': 1.0},
-        'teeth': {'TeethTongue_Neutral': 1.0}
-    })
+    # Return shape keys or neutral default (explicit zeros)
+    return PHONEME_SHAPE_KEYS.get(clean_phoneme, PHONEME_SHAPE_KEYS['sil'])
 
 
 def ipa_to_arpabet(ipa: str) -> str:

@@ -1,6 +1,6 @@
 
 """
-Phoneme Service - Converts text to ARPABET phonemes and visemes using g2p_en library
+Phoneme Service - Converts text to ARPABET phonemes and visemes using g2p-arpabet
 Now with custom 39-phoneme shape key mappings for precise lip-sync control
 """
 import os
@@ -8,39 +8,71 @@ import sys
 import re
 from typing import List, Dict, Optional
 import tempfile
-from g2p_en import G2p
 from app.services.phoneme_shapes import get_shape_keys_for_phoneme
+from app.services.viseme_mapper import phonemes_to_grouped_timeline
 
-# Initialize G2P (English) model
-# This model converts English text to ARPABET phonemes
+# Prefer g2p-arpabet; fallback to g2p_en for backward compatibility
+g2p = None
+_g2p_backend = "none"
 try:
+    from g2p_arpabet import G2p
     g2p = G2p()
-except Exception as e:
-    print(f"⚠️ Failed to initialize g2p_en: {e}")
-    g2p = None
+    _g2p_backend = "g2p-arpabet"
+except ImportError:
+    try:
+        from g2p_en import G2p
+        g2p = G2p()
+        _g2p_backend = "g2p_en"
+    except Exception as e:
+        print(f"⚠️ Failed to initialize g2p-arpabet / g2p_en: {e}")
 
 # Allosaurus removed - audio upload feature deprecated
 
 
 # ARPABET Durations (in seconds)
-# Vowels generally last longer (~0.12s) than consonants (~0.08s)
+# Vowels generally last longer (~0.09s) than consonants (~0.06-0.08s)
 ARPABET_DURATIONS = {
     # Vowels
-    'AA': 0.12, 'AE': 0.12, 'AH': 0.12, 'AO': 0.12, 'AW': 0.12,
-    'AY': 0.12, 'EH': 0.12, 'ER': 0.12, 'EY': 0.12, 'IH': 0.12,
-    'IY': 0.12, 'OW': 0.12, 'OY': 0.12, 'UH': 0.12, 'UW': 0.12,
+    'AA': 0.09, 'AE': 0.09, 'AH': 0.09, 'AO': 0.09, 'AW': 0.09,
+    'AY': 0.09, 'EH': 0.09, 'ER': 0.09, 'EY': 0.09, 'IH': 0.09,
+    'IY': 0.09, 'OW': 0.09, 'OY': 0.09, 'UH': 0.09, 'UW': 0.09,
+    'AX': 0.09, 'AXR': 0.09, 'IX': 0.09,  # reduced/schwa (g2p_en)
     # Consonants
     'B': 0.06, 'CH': 0.08, 'D': 0.06, 'DH': 0.06, 'F': 0.08,
     'G': 0.06, 'HH': 0.06, 'JH': 0.08, 'K': 0.06, 'L': 0.08,
     'M': 0.08, 'N': 0.06, 'NG': 0.08, 'P': 0.06, 'R': 0.08,
     'S': 0.08, 'SH': 0.08, 'T': 0.06, 'TH': 0.08, 'V': 0.06,
     'W': 0.08, 'Y': 0.06, 'Z': 0.08, 'ZH': 0.08,
-    # Silence / Pause
-    ' ': 0.05,
-    ',': 0.2,
-    '.': 0.4,
-    '?': 0.4,
-    '!': 0.4
+}
+
+# Punctuation Pause Durations (in seconds)
+# These create natural pauses in speech for better pacing and clarity
+PUNCTUATION_PAUSES = {
+    # Short pauses
+    ' ': 0.05,      # Space between words (very brief)
+    ',': 0.45,      # Comma (short pause)
+    ';': 0.30,      # Semicolon (medium-short pause)
+    ':': 0.30,      # Colon (medium-short pause)
+    '-': 0.20,      # Dash/hyphen (brief pause)
+    '–': 0.25,      # En dash (short pause)
+    '—': 0.30,      # Em dash (medium pause)
+    
+    # Medium pauses
+    '...': 0.50,    # Ellipsis (thinking/trailing off)
+    '…': 0.50,      # Ellipsis character
+    
+    # Long pauses (end of sentence)
+    '.': 1,      # Period (full stop)
+    '?': 1,      # Question mark
+    '!': 1,      # Exclamation mark
+    
+    # Grouping pauses
+    '(': 0.15,      # Opening parenthesis (brief)
+    ')': 0.20,      # Closing parenthesis (short)
+    '[': 0.15,      # Opening bracket
+    ']': 0.20,      # Closing bracket
+    '"': 0.10,      # Quote mark (minimal)
+    "'": 0.10,      # Apostrophe/single quote (minimal)
 }
 
 def remove_stress(phone: str) -> str:
@@ -56,7 +88,7 @@ def text_to_phonemes(text: str, language: str = 'en-us') -> str:
         Space-separated ARPABET string
     """
     if not g2p:
-        raise RuntimeError("g2p_en library not initialized")
+        raise RuntimeError("g2p-arpabet / g2p_en not initialized")
     
     if not text or text.strip() == '':
         return ''
@@ -92,7 +124,7 @@ def text_to_viseme_sequence(text: str, language: str = 'en-us') -> List[Dict]:
         Each frame contains: viseme, start, duration, shape_keys
     """
     if not g2p:
-        raise RuntimeError("g2p_en library not initialized")
+        raise RuntimeError("g2p-arpabet / g2p_en not initialized")
         
     # Get phoneme list from g2p
     # Example: ['HH', 'AH0', 'L', 'OW1', ' ', 'W', 'ER1', 'L', 'D']
@@ -101,11 +133,14 @@ def text_to_viseme_sequence(text: str, language: str = 'en-us') -> List[Dict]:
     viseme_sequence = []
     current_time = 0.0
     
-    for phone in raw_phonemes:
-        # Handle spaces/punctuation
-        if phone == ' ':
-            # Add small silence between words
-            duration = 0.04
+    i = 0
+    while i < len(raw_phonemes):
+        phone = raw_phonemes[i]
+        
+        # Check for ellipsis (3 dots in sequence)
+        if phone == '.' and i + 2 < len(raw_phonemes) and raw_phonemes[i+1] == '.' and raw_phonemes[i+2] == '.':
+            # Ellipsis pause
+            duration = PUNCTUATION_PAUSES.get('...', 0.50)
             shape_keys = get_shape_keys_for_phoneme('sil')
             viseme_sequence.append({
                 'viseme': 'sil',
@@ -114,11 +149,12 @@ def text_to_viseme_sequence(text: str, language: str = 'en-us') -> List[Dict]:
                 'shape_keys': shape_keys
             })
             current_time += duration
+            i += 3  # Skip the three dots
             continue
-            
-        if phone in [',', '.', '?', '!']:
-            # Punctuation pause
-            duration = ARPABET_DURATIONS.get(phone, 0.2)
+        
+        # Handle spaces and punctuation
+        if phone in PUNCTUATION_PAUSES:
+            duration = PUNCTUATION_PAUSES[phone]
             shape_keys = get_shape_keys_for_phoneme('sil')
             viseme_sequence.append({
                 'viseme': 'sil',
@@ -127,6 +163,7 @@ def text_to_viseme_sequence(text: str, language: str = 'en-us') -> List[Dict]:
                 'shape_keys': shape_keys
             })
             current_time += duration
+            i += 1
             continue
             
         # Standard Phoneme
@@ -147,6 +184,7 @@ def text_to_viseme_sequence(text: str, language: str = 'en-us') -> List[Dict]:
         })
         
         current_time += duration
+        i += 1  # Increment counter
         
     # Add final silence to ensure animation resets
     shape_keys = get_shape_keys_for_phoneme('sil')
@@ -158,6 +196,71 @@ def text_to_viseme_sequence(text: str, language: str = 'en-us') -> List[Dict]:
     })
     
     return viseme_sequence
+
+
+def text_to_grouped_viseme_sequence(text: str, language: str = 'en-us') -> List[Dict]:
+    """
+    Convert text to a grouped viseme sequence (NEW phoneme grouping approach)
+    
+    Groups consecutive phonemes with the same mouth shape and merges them
+    for improved lip sync timing accuracy.
+    
+    Args:
+        text: Input text
+        language: Language code (default: 'en-us')
+    
+    Returns:
+        List of grouped viseme segments with timing information
+        Each segment contains: group, phonemes, start, end
+    """
+    if not g2p:
+        raise RuntimeError("g2p-arpabet / g2p_en not initialized")
+        
+    # Get phoneme list from g2p
+    raw_phonemes = g2p(text)
+    
+    # Clean phonemes: remove stress markers and handle spaces/punctuation
+    phonemes = []
+    phoneme_durations = []
+    
+    i = 0
+    while i < len(raw_phonemes):
+        phone = raw_phonemes[i]
+        
+        # Check for ellipsis (3 dots in sequence)
+        if phone == '.' and i + 2 < len(raw_phonemes) and raw_phonemes[i+1] == '.' and raw_phonemes[i+2] == '.':
+            phonemes.append('sil')
+            phoneme_durations.append(PUNCTUATION_PAUSES.get('...', 0.50))
+            i += 3  # Skip the three dots
+            continue
+        
+        # Handle spaces and punctuation as pauses
+        if phone in PUNCTUATION_PAUSES:
+            phonemes.append('sil')
+            phoneme_durations.append(PUNCTUATION_PAUSES[phone])
+            i += 1
+            continue
+            
+        # Standard phoneme
+        base_phone = remove_stress(phone)
+        phonemes.append(base_phone)
+        phoneme_durations.append(ARPABET_DURATIONS.get(base_phone, 0.08))
+        i += 1
+    
+    # Use the new grouping function from viseme_mapper
+    grouped_timeline = phonemes_to_grouped_timeline(phonemes, phoneme_durations)
+    
+    # Add final silence to ensure animation resets
+    if grouped_timeline:
+        last_end = grouped_timeline[-1]['end']
+        grouped_timeline.append({
+            'group': 'sil',
+            'phonemes': ['sil'],
+            'start': last_end,
+            'end': last_end + 0.2
+        })
+    
+    return grouped_timeline
 
 
 
