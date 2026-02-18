@@ -24,7 +24,7 @@ export const useLipSync = (headMeshRef, teethMeshRef, onStart, onEnd) => {
     const currentEventIndex = useRef(0);
     const speechId = useRef(0);
     const animationStartTime = useRef(0); // Track when animation started
-    const LEAD_IN_TIME = 0.2; // Start animation 1 second before audio (in seconds)
+    const LEAD_IN_TIME = 0.1; // Start animation 1 second before audio (in seconds)
 
     // Store callbacks in refs
     const onStartRef = useRef(onStart);
@@ -146,7 +146,7 @@ export const useLipSync = (headMeshRef, teethMeshRef, onStart, onEnd) => {
             // Audio Setup
             const audio = new Audio(cacheBustedUrl);
             audio.crossOrigin = "anonymous";
-            audio.playbackRate = 0.80; // Slow down audio to 80% speed (adjust between 0.1-2.0)
+            audio.playbackRate = 1; // Slow down audio to 80% speed (adjust between 0.1-2.0)
             audioRef.current = audio;
 
             const timelineDuration = timeline.length > 0 ? timeline[timeline.length - 1].endTime : 0;

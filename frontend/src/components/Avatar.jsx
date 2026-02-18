@@ -464,6 +464,7 @@ function Avatar({ model, handpos, ischatting, text, speakTrigger, onSpeechStart,
     // ============================================
     useEffect(() => {
         if (speakTrigger > 0 && text && text.trim() !== '') {
+            console.log(`🗣️ Avatar Component: Received speak trigger #${speakTrigger} for text:`, text.substring(0, 30) + "...");
             speak(text);
         }
 

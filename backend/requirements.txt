@@ -14,6 +14,7 @@ passlib[bcrypt]
 ollama
 yfinance
 edge-tts
+gTTS
 ffmpeg-python
 # G2P: app uses g2p-arpabet when available, else g2p_en (same ARPABET API)
 g2p_en
